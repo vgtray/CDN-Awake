@@ -1,0 +1,27 @@
+# Environment
+node_modules/
+.env
+*.log
+logs/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Test coverage
+coverage/
+
+# Build
+dist/
+build/
