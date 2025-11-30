@@ -5,5 +5,7 @@ services:
     build: .
     ports:
       - "8899:80"
+    environment:
+      - API_KEY=mysecretkey
     volumes:
       - ./content:/usr/share/nginx/html/content
