@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  cdn:
+    build: .
+    ports:
+      - "8899:80"
+    volumes:
+      - ./content:/usr/share/nginx/html/content
