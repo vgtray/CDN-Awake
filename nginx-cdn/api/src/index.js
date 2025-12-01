@@ -159,9 +159,13 @@ async function startServer() {
             }
         }, cleanupInterval);
 
-        // Initial cleanup on startup
-        const initialCleanup = await cleanupExpiredTokens();
-        logger.info(`Initial cleanup: removed ${initialCleanup} expired tokens`);
+        // Initial cleanup on startup (optional, won't crash if tables don't exist)
+        try {
+            const initialCleanup = await cleanupExpiredTokens();
+            logger.info(`Initial cleanup: removed ${initialCleanup} expired tokens`);
+        } catch (error) {
+            logger.warn('Initial cleanup skipped (tables may not exist yet):', error.message);
+        }
 
         // Start listening
         app.listen(PORT, '0.0.0.0', () => {
