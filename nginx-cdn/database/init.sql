@@ -62,6 +62,45 @@ CREATE TABLE IF NOT EXISTS api_keys (
     expires_at TIMESTAMP WITH TIME ZONE
 );
 
+-- Admin users table: for admin panel authentication
+CREATE TABLE IF NOT EXISTS admin_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'admin' CHECK (role IN ('admin', 'superadmin')),
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_by UUID REFERENCES admin_users(id)
+);
+
+-- Admin sessions table: for JWT refresh tokens
+CREATE TABLE IF NOT EXISTS admin_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    refresh_token VARCHAR(255) NOT NULL UNIQUE,
+    ip_address INET,
+    user_agent TEXT,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_revoked BOOLEAN DEFAULT FALSE
+);
+
+-- Admin activity logs
+CREATE TABLE IF NOT EXISTS admin_activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES admin_users(id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL,
+    target_type VARCHAR(50),
+    target_id UUID,
+    details JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_files_stored_name ON files(stored_name);
 CREATE INDEX IF NOT EXISTS idx_files_created_at ON files(created_at);
@@ -77,6 +116,12 @@ CREATE INDEX IF NOT EXISTS idx_logs_created_at ON access_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_logs_action ON access_logs(action);
 CREATE INDEX IF NOT EXISTS idx_logs_ip_address ON access_logs(ip_address);
 
+-- Indexes for admin tables
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_user_id ON admin_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_refresh_token ON admin_sessions(refresh_token);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_user_id ON admin_activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_activity_created_at ON admin_activity_logs(created_at);
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -90,6 +135,13 @@ $$ language 'plpgsql';
 DROP TRIGGER IF EXISTS update_files_updated_at ON files;
 CREATE TRIGGER update_files_updated_at
     BEFORE UPDATE ON files
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger for admin_users table
+DROP TRIGGER IF EXISTS update_admin_users_updated_at ON admin_users;
+CREATE TRIGGER update_admin_users_updated_at
+    BEFORE UPDATE ON admin_users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 

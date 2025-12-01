@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CDN API - Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <style>
         * {
             margin: 0;
@@ -158,9 +159,28 @@
             border-radius: 8px;
             color: #fca5a5;
         }
+        .admin-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: transform 0.2s;
+        }
+        .admin-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
     </style>
 </head>
 <body>
+    <a href="/admin-login.html" class="admin-link">🔐 Admin Panel</a>
+    
     <div class="header">
         <h1>
             📦 CDN API

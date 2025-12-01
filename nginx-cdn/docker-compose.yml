@@ -33,6 +33,9 @@ services:
       - NODE_ENV=production
       - API_PORT=${API_PORT:-3000}
       - API_KEY=${API_KEY:-mysecretkey}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - ADMIN_SETUP_KEY=${ADMIN_SETUP_KEY:-}
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB:-cdn_db}
@@ -70,6 +73,11 @@ services:
       - "${NGINX_PORT:-8899}:80"
     volumes:
       - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./favicon.svg:/usr/share/nginx/html/favicon.svg:ro
+      - ./admin-login.html:/usr/share/nginx/html/admin-login.html:ro
+      - ./admin-dashboard.html:/usr/share/nginx/html/admin-dashboard.html:ro
+      - ./admin-utils.js:/usr/share/nginx/html/admin-utils.js:ro
+      - ./admin-dashboard.js:/usr/share/nginx/html/admin-dashboard.js:ro
       - nginx_logs:/var/log/nginx
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/nginx-health"]

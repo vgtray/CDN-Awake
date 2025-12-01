@@ -1,9 +1,10 @@
-# CDN API Sécurisé - Node.js + PostgreSQL
+# CDN API Sécurisé avec Interface d'Administration - Node.js + PostgreSQL
 
-API REST sécurisée pour un système de CDN (Content Delivery Network) avec gestion de fichiers, tokens d'accès temporaires et logs d'accès complets.
+API REST sécurisée pour un système de CDN (Content Delivery Network) avec gestion de fichiers, tokens d'accès temporaires, logs d'accès complets et **interface d'administration web complète**.
 
 ## 🚀 Fonctionnalités
 
+### API & Backend
 - ✅ **Upload de fichiers sécurisé** avec validation (taille, nom, MIME type)
 - ✅ **Tokens d'accès temporaires** et uniques par fichier
 - ✅ **Téléchargement sécurisé** avec validation de token
@@ -15,35 +16,57 @@ API REST sécurisée pour un système de CDN (Content Delivery Network) avec ges
 - ✅ **Docker + docker-compose** prêt pour le déploiement
 - ✅ **Tests automatisés** complets
 
+### Interface d'Administration 🆕
+- ✅ **Dashboard complet** avec statistiques en temps réel
+- ✅ **Gestion des fichiers** : Lister, rechercher, voir détails, supprimer
+- ✅ **Gestion des tokens** : Créer, révoquer, copier liens
+- ✅ **Visualisation des logs** : Accès et activités admin
+- ✅ **Gestion des utilisateurs** : Créer/modifier/supprimer admins (superadmin only)
+- ✅ **Authentification JWT** avec sessions sécurisées
+- ✅ **Interface moderne et responsive**
+- ✅ **Rôles et permissions** : Admin vs Super Admin
+
 ## 📁 Structure du Projet
 
 ```
 nginx-cdn/
-├── docker-compose.yml          # Orchestration des 3 services
-├── .env                        # Variables d'environnement
-├── .env.example                # Exemple de configuration
+├── docker-compose.yml              # Orchestration des 3 services
+├── .env                            # Variables d'environnement
+├── .env.example                    # Exemple de configuration
+├── create-admin.ps1                # 🆕 Script pour créer le premier admin
+├── index.html                      # Page d'accueil (avec lien admin)
+├── admin-login.html                # 🆕 Page de connexion admin
+├── admin-dashboard.html            # 🆕 Dashboard d'administration
+├── admin-utils.js                  # 🆕 Utilitaires JavaScript
+├── admin-dashboard.js              # 🆕 Logique du dashboard
+├── ADMIN_SETUP_GUIDE.md            # 🆕 Guide setup admin
+├── ADMIN_INTERFACE_GUIDE.md        # 🆕 Guide interface admin
 ├── api/
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── jest.config.js
 │   ├── src/
-│   │   ├── index.js            # Point d'entrée
+│   │   ├── index.js                # Point d'entrée
 │   │   ├── config/
-│   │   │   └── database.js     # Connexion PostgreSQL
+│   │   │   └── database.js         # Connexion PostgreSQL
 │   │   ├── middleware/
-│   │   │   ├── auth.js         # Authentification API Key
-│   │   │   ├── rateLimit.js    # Rate limiting
-│   │   │   └── validation.js   # Validation fichiers
+│   │   │   ├── auth.js             # Authentification API Key
+│   │   │   ├── adminAuth.js        # 🆕 Authentification JWT admin
+│   │   │   ├── rateLimit.js        # Rate limiting
+│   │   │   └── validation.js       # Validation fichiers
 │   │   ├── routes/
-│   │   │   ├── files.js        # CRUD fichiers
-│   │   │   ├── tokens.js       # Gestion tokens
-│   │   │   └── download.js     # Téléchargement sécurisé
+│   │   │   ├── files.js            # CRUD fichiers
+│   │   │   ├── tokens.js           # Gestion tokens
+│   │   │   ├── download.js         # Téléchargement sécurisé
+│   │   │   ├── auth.js             # 🆕 Routes authentification admin
+│   │   │   └── admin.js            # 🆕 Routes administration
 │   │   ├── models/
 │   │   │   ├── File.js
 │   │   │   ├── Token.js
-│   │   │   └── AccessLog.js
+│   │   │   ├── AccessLog.js
+│   │   │   └── AdminUser.js        # 🆕 Modèle utilisateur admin
 │   │   ├── services/
-│   │   │   └── cleanup.js      # Nettoyage tokens expirés
+│   │   │   └── cleanup.js          # Nettoyage tokens expirés
 │   │   └── utils/
 │   │       └── logger.js
 │   └── tests/
@@ -54,8 +77,8 @@ nginx-cdn/
 │   ├── 404.html
 │   └── 50x.html
 ├── database/
-│   └── init.sql                # Schema PostgreSQL
-└── uploads/                    # Fichiers uploadés (volume Docker)
+│   └── init.sql                    # Schema PostgreSQL (avec tables admin)
+└── uploads/                        # Fichiers uploadés (volume Docker)
 ```
 
 ## 🏃 Démarrage Rapide
@@ -63,6 +86,7 @@ nginx-cdn/
 ### Prérequis
 - Docker et Docker Compose installés
 - Git
+- PowerShell (pour le script de création d'admin)
 
 ### Installation
 
@@ -73,7 +97,7 @@ cd nginx-cdn
 
 # Configurer les variables d'environnement
 cp .env.example .env
-# Éditer .env avec vos paramètres
+# Éditer .env avec vos paramètres (IMPORTANT: changez API_KEY et JWT_SECRET)
 
 # Démarrer les services
 docker-compose up -d
@@ -94,6 +118,43 @@ curl http://localhost:8899/health
 # API info
 curl http://localhost:8899/api
 ```
+
+### 🔐 Créer le Premier Administrateur
+
+**Option 1 : Via Script PowerShell (Recommandé)**
+
+```powershell
+./create-admin.ps1
+```
+
+Le script vous guidera pas à pas pour créer votre premier admin.
+
+**Option 2 : Via API**
+
+```bash
+curl -X POST http://localhost:8899/api/auth/setup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "email": "admin@example.com",
+    "password": "VotreMotDePasseSecurise123!",
+    "setupKey": "VOTRE_API_KEY"
+  }'
+```
+
+**Option 3 : Voir le guide complet**
+
+Consultez `ADMIN_SETUP_GUIDE.md` pour toutes les options détaillées.
+
+### 🎯 Accéder à l'Interface Admin
+
+1. Ouvrez votre navigateur : http://localhost:8899/admin-login.html
+2. Connectez-vous avec vos identifiants
+3. Explorez le dashboard !
+
+Ou cliquez sur le bouton **"🔐 Admin Panel"** sur la page d'accueil.
+
+**Guide complet** : Voir `ADMIN_INTERFACE_GUIDE.md`
 
 ## 📡 Endpoints API
 

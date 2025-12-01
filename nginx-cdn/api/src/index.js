@@ -15,6 +15,8 @@ const { cleanupExpiredTokens } = require('./services/cleanup');
 const filesRoutes = require('./routes/files');
 const tokensRoutes = require('./routes/tokens');
 const downloadRoutes = require('./routes/download');
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.API_PORT || 3000;
@@ -96,6 +98,12 @@ app.get('/api', (req, res) => {
 
 // Public download route (token-based, no API key required)
 app.use('/download', downloadRoutes);
+
+// Admin authentication routes (public for login/setup)
+app.use('/api/auth', authRoutes);
+
+// Admin panel routes (require admin JWT)
+app.use('/api/admin', adminRoutes);
 
 // Protected API routes (require API key)
 app.use('/api/files', apiKeyAuth, filesRoutes);
