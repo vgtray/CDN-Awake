@@ -160,7 +160,7 @@ async function searchFiles() {
     
     // Si la recherche est vide, recharger tous les fichiers
     if (search === '') {
-        loadFiles(currentPage);
+        loadFiles(1);
         return;
     }
     
