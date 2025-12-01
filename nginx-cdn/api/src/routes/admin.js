@@ -1,14 +1,39 @@
 const express = require('express');
 const { body, param, query, validationResult } = require('express-validator');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
 
 const AdminUser = require('../models/AdminUser');
 const File = require('../models/File');
 const Token = require('../models/Token');
 const AccessLog = require('../models/AccessLog');
+const ApiKey = require('../models/ApiKey');
 const { adminAuth, superadminOnly } = require('../middleware/adminAuth');
+const { sanitizeFileName } = require('../middleware/validation');
 const logger = require('../utils/logger');
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, '../../uploads');
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const storedName = File.generateStoredName(file.originalname);
+        cb(null, storedName);
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: parseInt(process.env.MAX_FILE_SIZE) || 104857600, // 100MB
+        files: 1
+    }
+});
 
 // All routes require admin auth
 router.use(adminAuth);
@@ -258,6 +283,102 @@ router.delete('/files/:id', [
         res.status(500).json({
             error: 'Internal Server Error',
             message: 'Failed to delete file',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * POST /api/admin/files/upload - Upload a new file (admin)
+ */
+router.post('/files/upload', upload.single('file'), async (req, res) => {
+    const startTime = Date.now();
+    
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'No file provided',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        const file = req.file;
+        
+        // Read file to calculate checksum
+        const fileBuffer = await fs.readFile(file.path);
+        const checksum = File.calculateChecksum(fileBuffer);
+        
+        // Create file record in database
+        const savedFile = await File.create({
+            originalName: sanitizeFileName(file.originalname),
+            storedName: file.filename,
+            mimeType: file.mimetype,
+            size: file.size,
+            checksum,
+            uploadedBy: req.adminUser.username
+        });
+        
+        // Log the upload
+        await AccessLog.logUpload({
+            fileId: savedFile.id,
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent'),
+            statusCode: 201,
+            responseTimeMs: Date.now() - startTime,
+            metadata: { originalName: file.originalname, uploadedBy: req.adminUser.username }
+        });
+        
+        // Log admin activity
+        await AdminUser.logActivity({
+            userId: req.adminUser.id,
+            action: 'upload_file',
+            targetType: 'file',
+            targetId: savedFile.id,
+            details: { 
+                fileName: savedFile.original_name,
+                fileSize: savedFile.size,
+                mimeType: savedFile.mime_type
+            },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
+        
+        logger.info(`File uploaded by admin: ${savedFile.original_name}`, {
+            adminId: req.adminUser.id,
+            adminUsername: req.adminUser.username,
+            fileId: savedFile.id,
+            size: savedFile.size,
+            mimeType: savedFile.mime_type
+        });
+        
+        res.status(201).json({
+            success: true,
+            message: 'File uploaded successfully',
+            data: {
+                id: savedFile.id,
+                originalName: savedFile.original_name,
+                mimeType: savedFile.mime_type,
+                size: savedFile.size,
+                checksum: savedFile.checksum,
+                createdAt: savedFile.created_at
+            }
+        });
+    } catch (error) {
+        logger.error('Admin upload file error:', error);
+        
+        // Clean up uploaded file on error
+        if (req.file) {
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                logger.error('Failed to clean up file:', unlinkError);
+            }
+        }
+        
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to upload file',
             timestamp: new Date().toISOString()
         });
     }

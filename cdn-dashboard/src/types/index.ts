@@ -91,21 +91,30 @@ export interface DashboardStats {
   files: {
     total: number;
     totalSize: number;
-    avgSize: number;
-    byType: Record<string, number>;
+    totalSizeMB: number;
   };
   tokens: {
     total: number;
     active: number;
-    expired: number;
+    totalDownloads: number;
   };
-  logs: {
-    total: number;
-    today: number;
-    thisWeek: number;
+  access: {
+    totalRequests: number;
+    downloads: number;
+    uploads: number;
+    uniqueIPs: number;
   };
-  recentLogs: AccessLog[];
+  recentActivity: RecentActivity[];
   topFiles: TopFile[];
+}
+
+export interface RecentActivity {
+  id: string;
+  action: string;
+  fileName: string;
+  ipAddress: string;
+  statusCode: number;
+  createdAt: string;
 }
 
 export interface AccessLog {
@@ -119,9 +128,10 @@ export interface AccessLog {
 }
 
 export interface TopFile {
-  file_id: string;
-  download_count: number;
-  file?: CDNFile;
+  id: string;
+  original_name: string;
+  access_count: number;
+  unique_visitors: number;
 }
 
 // Activity Logs

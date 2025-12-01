@@ -151,17 +151,16 @@ export default function DashboardPage() {
         />
         <StatsCard
           title="Tokens Actifs"
-          value={data?.tokens.active || 0}
-          subtitle={`${data?.tokens.expired || 0} expirés`}
+          value={data?.tokens?.active || 0}
+          subtitle={`${data?.tokens?.total || 0} total`}
           icon={Key}
           gradient="from-emerald-500 to-green-600"
         />
         <StatsCard
           title="Téléchargements"
-          value={data?.logs.today || 0}
-          subtitle="Aujourd'hui"
+          value={data?.access?.downloads || 0}
+          subtitle={`${data?.access?.uniqueIPs || 0} IPs uniques`}
           icon={Download}
-          trend={{ value: 12, label: 'vs hier' }}
           gradient="from-amber-500 to-orange-600"
         />
         <StatsCard
@@ -188,8 +187,8 @@ export default function DashboardPage() {
                 En direct
               </Badge>
             </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64 w-full" style={{ minHeight: '256px', minWidth: '200px' }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
@@ -237,13 +236,13 @@ export default function DashboardPage() {
               <Clock className="w-5 h-5 text-gray-500" />
             </div>
             <div className="divide-y divide-gray-800">
-              {data?.recentLogs?.slice(0, 5).map((log, index) => (
+              {data?.recentActivity?.slice(0, 5).map((activity, index) => (
                 <ActivityItem
-                  key={log.id || index}
-                  icon={getFileIcon(log.file?.mime_type || 'application/octet-stream')}
-                  title={log.file?.original_name || 'Fichier inconnu'}
-                  description={log.ip_address || 'IP inconnue'}
-                  time={formatRelativeTime(log.accessed_at)}
+                  key={activity.id || index}
+                  icon={activity.action === 'download' ? '📥' : activity.action === 'upload' ? '📤' : '📄'}
+                  title={activity.fileName || 'Fichier inconnu'}
+                  description={activity.ipAddress || 'IP inconnue'}
+                  time={formatRelativeTime(activity.createdAt)}
                 />
               )) || (
                 <p className="text-gray-500 text-center py-8">Aucune activité récente</p>
@@ -268,24 +267,22 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {data?.topFiles?.map((item, index) => (
-                  <tr key={item.file_id || index} className="hover:bg-gray-800/50 transition-colors">
+                  <tr key={item.id || index} className="hover:bg-gray-800/50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">
-                          {getFileIcon(item.file?.mime_type || 'application/octet-stream')}
-                        </span>
+                        <span className="text-xl">📄</span>
                         <span className="text-white font-medium">
-                          {item.file?.original_name || 'Fichier inconnu'}
+                          {item.original_name || 'Fichier inconnu'}
                         </span>
                       </div>
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="default">
-                        {item.file?.mime_type?.split('/')[1] || 'unknown'}
+                        {item.unique_visitors} visiteurs
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-white font-semibold">{item.download_count}</span>
+                      <span className="text-white font-semibold">{item.access_count}</span>
                       <span className="text-gray-500 ml-1">téléchargements</span>
                     </td>
                   </tr>

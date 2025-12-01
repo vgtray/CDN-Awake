@@ -73,9 +73,10 @@ class APIClient {
   async login(username: string, password: string) {
     const response = await this.client.post('/auth/login', { username, password });
     if (response.data.success) {
-      this.setToken(response.data.data.token);
+      this.setToken(response.data.data.accessToken);
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('refresh_token', response.data.data.refreshToken);
       }
     }
     return response.data;
@@ -101,9 +102,13 @@ class APIClient {
   }
 
   async refreshToken() {
-    const response = await this.client.post('/auth/refresh');
+    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    const response = await this.client.post('/auth/refresh', { refreshToken });
     if (response.data.success) {
-      this.setToken(response.data.data.token);
+      this.setToken(response.data.data.accessToken);
     }
     return response.data;
   }
@@ -137,10 +142,10 @@ class APIClient {
       formData.append('expiresInHours', expiresInHours.toString());
     }
 
-    const response = await this.client.post('/files/upload', formData, {
+    // Use admin upload endpoint with Bearer auth (already in interceptor)
+    const response = await this.client.post('/admin/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '',
       },
     });
     return response.data;
