@@ -72,12 +72,6 @@ services:
     ports:
       - "${NGINX_PORT:-8899}:80"
     volumes:
-      - ./index.html:/usr/share/nginx/html/index.html:ro
-      - ./favicon.svg:/usr/share/nginx/html/favicon.svg:ro
-      - ./admin-login.html:/usr/share/nginx/html/admin-login.html:ro
-      - ./admin-dashboard.html:/usr/share/nginx/html/admin-dashboard.html:ro
-      - ./admin-utils.js:/usr/share/nginx/html/admin-utils.js:ro
-      - ./admin-dashboard.js:/usr/share/nginx/html/admin-dashboard.js:ro
       - nginx_logs:/var/log/nginx
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/nginx-health"]
