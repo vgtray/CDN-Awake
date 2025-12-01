@@ -412,6 +412,9 @@ async function loadUsers() {
                         <td>${user.last_login_at ? AdminUtils.formatDate(user.last_login_at) : 'Jamais'}</td>
                         <td>
                             <div class="action-buttons">
+                                <button class="btn btn-small btn-primary" onclick="changeUserRole('${user.id}', '${user.username}', '${user.role}')" title="Changer le rôle">
+                                    👤 Rôle
+                                </button>
                                 <button class="btn btn-small btn-secondary" onclick="toggleUserStatus('${user.id}', ${!user.is_active})">
                                     ${user.is_active ? 'Désactiver' : 'Activer'}
                                 </button>
@@ -441,6 +444,27 @@ async function toggleUserStatus(userId, activate) {
         loadUsers();
     } catch (error) {
         AdminUtils.showAlert('Erreur lors de la modification de l\'utilisateur', 'error');
+    }
+}
+
+async function changeUserRole(userId, username, currentRole) {
+    const newRole = currentRole === 'admin' ? 'superadmin' : 'admin';
+    const roleLabel = newRole === 'superadmin' ? 'Super Admin' : 'Admin';
+    
+    if (!window.confirm(`Changer le rôle de "${username}" en ${roleLabel} ?`)) {
+        return;
+    }
+    
+    try {
+        await AdminUtils.apiCall(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ role: newRole })
+        });
+        
+        AdminUtils.showAlert(`Rôle changé en ${roleLabel} avec succès`, 'success');
+        loadUsers();
+    } catch (error) {
+        AdminUtils.showAlert('Erreur lors du changement de rôle', 'error');
     }
 }
 
