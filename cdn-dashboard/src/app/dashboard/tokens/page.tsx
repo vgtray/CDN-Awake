@@ -105,9 +105,11 @@ export default function TokensPage() {
   // Filter tokens based on search
   const filteredTokens = data?.data?.filter((token: AccessToken) => {
     if (!search) return true;
+    const searchLower = search.toLowerCase();
     return (
-      token.token.toLowerCase().includes(search.toLowerCase()) ||
-      token.file_id.toLowerCase().includes(search.toLowerCase())
+      token.token?.toLowerCase().includes(searchLower) ||
+      token.fileId?.toLowerCase().includes(searchLower) ||
+      token.fileName?.toLowerCase().includes(searchLower)
     );
   });
 
