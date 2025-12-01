@@ -432,13 +432,16 @@ router.get('/tokens', async (req, res) => {
 });
 
 /**
+ * POST /api/admin/tokens - Create a new token (alias for /tokens/create)
  * POST /api/admin/tokens/create - Create a new token
  */
-router.post('/tokens/create', [
+const createTokenHandler = [
     body('fileId').isUUID(),
     body('expiresInHours').isInt({ min: 1, max: 8760 }),
     body('maxDownloads').isInt({ min: 1, max: 10000 }).optional()
-], handleValidationErrors, async (req, res) => {
+];
+
+const createTokenLogic = async (req, res) => {
     try {
         const { fileId, expiresInHours, maxDownloads = 1 } = req.body;
         
@@ -493,7 +496,10 @@ router.post('/tokens/create', [
             timestamp: new Date().toISOString()
         });
     }
-});
+};
+
+router.post('/tokens', createTokenHandler, handleValidationErrors, createTokenLogic);
+router.post('/tokens/create', createTokenHandler, handleValidationErrors, createTokenLogic);
 
 /**
  * DELETE /api/admin/tokens/:id - Revoke a single token
@@ -877,6 +883,131 @@ router.post('/cleanup/sessions', async (req, res) => {
         res.status(500).json({
             error: 'Internal Server Error',
             message: 'Failed to cleanup sessions',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// ============ API KEYS MANAGEMENT ============
+
+/**
+ * GET /api/admin/api-keys - List all API keys
+ */
+router.get('/api-keys', async (req, res) => {
+    try {
+        const { includeInactive = 'false' } = req.query;
+        
+        const apiKeys = await ApiKey.findAll({
+            includeInactive: includeInactive === 'true'
+        });
+        
+        res.json({
+            success: true,
+            data: apiKeys
+        });
+    } catch (error) {
+        logger.error('List API keys error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to list API keys',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * POST /api/admin/api-keys - Create a new API key
+ */
+router.post('/api-keys', [
+    body('name').isLength({ min: 1, max: 100 }).withMessage('Name is required'),
+    body('permissions').optional().isArray(),
+    body('expiresInDays').optional().isInt({ min: 1, max: 365 })
+], handleValidationErrors, async (req, res) => {
+    try {
+        const { name, permissions, expiresInDays } = req.body;
+        
+        const apiKey = await ApiKey.create({
+            name,
+            permissions: permissions || ['read', 'write'],
+            expiresInDays
+        });
+        
+        // Log activity
+        await AdminUser.logActivity({
+            userId: req.adminUser.id,
+            action: 'create_api_key',
+            targetType: 'api_key',
+            targetId: apiKey.id,
+            details: { name, permissions: permissions || ['read', 'write'] },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
+        
+        logger.info(`API key created: ${name}`, {
+            adminId: req.adminUser.id,
+            adminUsername: req.adminUser.username,
+            apiKeyId: apiKey.id
+        });
+        
+        res.status(201).json({
+            success: true,
+            message: 'API key created successfully. Save the key now - it cannot be retrieved later.',
+            data: apiKey
+        });
+    } catch (error) {
+        logger.error('Create API key error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to create API key',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * DELETE /api/admin/api-keys/:id - Revoke an API key
+ */
+router.delete('/api-keys/:id', [
+    param('id').isUUID()
+], handleValidationErrors, async (req, res) => {
+    try {
+        const apiKey = await ApiKey.revoke(req.params.id);
+        
+        if (!apiKey) {
+            return res.status(404).json({
+                error: 'Not Found',
+                message: 'API key not found',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        // Log activity
+        await AdminUser.logActivity({
+            userId: req.adminUser.id,
+            action: 'revoke_api_key',
+            targetType: 'api_key',
+            targetId: req.params.id,
+            details: { name: apiKey.name },
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent')
+        });
+        
+        logger.info(`API key revoked: ${apiKey.name}`, {
+            adminId: req.adminUser.id,
+            adminUsername: req.adminUser.username,
+            apiKeyId: req.params.id
+        });
+        
+        res.json({
+            success: true,
+            message: 'API key revoked successfully',
+            data: { id: req.params.id, name: apiKey.name }
+        });
+    } catch (error) {
+        logger.error('Revoke API key error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to revoke API key',
             timestamp: new Date().toISOString()
         });
     }

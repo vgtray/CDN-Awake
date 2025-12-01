@@ -76,12 +76,15 @@ export default function TokensPage() {
 
   const getTokenStatus = (token: AccessToken) => {
     const now = new Date();
-    const expiry = new Date(token.expires_at);
+    const expiry = new Date(token.expiresAt);
     
-    if (token.download_count >= token.max_downloads) {
+    if (token.isRevoked) {
+      return { status: 'revoked', label: 'Révoqué', variant: 'danger' as const };
+    }
+    if (token.downloadCount >= token.maxDownloads) {
       return { status: 'exhausted', label: 'Épuisé', variant: 'warning' as const };
     }
-    if (expiry < now) {
+    if (expiry < now || token.isExpired) {
       return { status: 'expired', label: 'Expiré', variant: 'danger' as const };
     }
     return { status: 'active', label: 'Actif', variant: 'success' as const };
@@ -178,10 +181,10 @@ export default function TokensPage() {
                           </div>
                           <div>
                             <p className="text-white font-mono text-sm">
-                              {token.token.slice(0, 16)}...
+                              {token.token?.slice(0, 16) || 'N/A'}...
                             </p>
                             <p className="text-sm text-gray-500">
-                              Fichier: {token.file_id.slice(0, 8)}...
+                              {token.fileName || `Fichier: ${token.fileId?.slice(0, 8) || 'N/A'}...`}
                             </p>
                           </div>
                         </div>
@@ -192,20 +195,20 @@ export default function TokensPage() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <Download className="w-4 h-4 text-gray-500" />
-                          <span className="text-white">{token.download_count}</span>
-                          <span className="text-gray-500">/ {token.max_downloads}</span>
+                          <span className="text-white">{token.downloadCount ?? 0}</span>
+                          <span className="text-gray-500">/ {token.maxDownloads ?? 0}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-gray-500" />
                           <span className="text-gray-300">
-                            {formatRelativeTime(token.expires_at)}
+                            {formatRelativeTime(token.expiresAt)}
                           </span>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-gray-300">
-                        {formatDate(token.created_at, false)}
+                        {formatDate(token.createdAt, false)}
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center justify-end gap-2">

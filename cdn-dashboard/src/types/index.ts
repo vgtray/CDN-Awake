@@ -58,13 +58,17 @@ export interface FileUploadResponse {
 export interface AccessToken {
   id: string;
   token: string;
-  file_id: string;
-  expires_at: string;
-  max_downloads: number;
-  download_count: number;
-  is_active: boolean;
-  created_by: string | null;
-  created_at: string;
+  fileId: string;
+  fileName?: string;
+  expiresAt: string;
+  maxDownloads: number;
+  downloadCount: number;
+  remainingDownloads?: number;
+  isRevoked: boolean;
+  isExpired: boolean;
+  isValid: boolean;
+  createdAt: string;
+  downloadUrl: string;
   file?: CDNFile;
 }
 
@@ -119,11 +123,15 @@ export interface RecentActivity {
 
 export interface AccessLog {
   id: string;
-  token_id: string;
-  file_id: string;
+  token_id: string | null;
+  file_id: string | null;
+  action: string;
   ip_address: string;
   user_agent: string;
-  accessed_at: string;
+  status_code: number;
+  response_time_ms: number;
+  created_at: string;
+  file_name?: string;
   file?: CDNFile;
 }
 

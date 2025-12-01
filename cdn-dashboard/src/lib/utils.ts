@@ -54,7 +54,8 @@ export function formatRelativeTime(date: string | Date): string {
   }
 }
 
-export function getFileIcon(mimeType: string): string {
+export function getFileIcon(mimeType: string | undefined | null): string {
+  if (!mimeType) return '📎';
   if (mimeType.startsWith('image/')) return '🖼️';
   if (mimeType.startsWith('video/')) return '🎬';
   if (mimeType.startsWith('audio/')) return '🎵';
@@ -94,7 +95,8 @@ export function generateDownloadUrl(token: string): string {
   return `${baseUrl}/download/${token}`;
 }
 
-export function getInitials(name: string): string {
+export function getInitials(name: string | undefined | null): string {
+  if (!name) return '??';
   return name
     .split(/[\s_-]+/)
     .map(part => part.charAt(0).toUpperCase())

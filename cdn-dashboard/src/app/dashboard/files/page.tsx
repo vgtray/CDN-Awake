@@ -183,7 +183,7 @@ export default function FilesPage() {
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <Badge variant="default">{file.mime_type.split('/')[1]}</Badge>
+                      <Badge variant="default">{file.mime_type?.split('/')[1] || 'unknown'}</Badge>
                     </td>
                     <td className="py-4 px-6 text-gray-300">{formatBytes(file.size)}</td>
                     <td className="py-4 px-6 text-gray-300">{formatDate(file.created_at)}</td>

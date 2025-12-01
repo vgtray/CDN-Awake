@@ -123,7 +123,7 @@ export default function LogsPage() {
                       </td>
                       <td className="py-4 px-6">
                         <p className="text-white">
-                          {log.file?.original_name || log.file_id.slice(0, 8) + '...'}
+                          {log.file_name || log.file?.original_name || (log.file_id ? log.file_id.slice(0, 8) + '...' : 'N/A')}
                         </p>
                       </td>
                       <td className="py-4 px-6">
