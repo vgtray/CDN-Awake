@@ -1,7 +1,6 @@
 services:
-  # PostgreSQL Database
   postgres:
-    build: ./nginx-cdn/postgres
+    build: ./services/postgres
     container_name: cdn-postgres
     restart: unless-stopped
     environment:
@@ -19,9 +18,8 @@ services:
     networks:
       - cdn-network
 
-  # Node.js API
   api:
-    build: ./nginx-cdn/api
+    build: ./services/api
     container_name: cdn-api
     restart: unless-stopped
     depends_on:
@@ -59,7 +57,6 @@ services:
     networks:
       - cdn-network
 
-  # Next.js Dashboard
   dashboard:
     build: ./cdn-dashboard
     container_name: cdn-dashboard
@@ -82,9 +79,8 @@ services:
     networks:
       - cdn-network
 
-  # Nginx Reverse Proxy
   nginx:
-    build: ./nginx-cdn/nginx
+    build: ./services/nginx
     container_name: cdn-nginx
     restart: unless-stopped
     depends_on:
@@ -96,7 +92,6 @@ services:
       - "${NGINX_PORT:-8899}:80"
     volumes:
       - nginx_logs:/var/log/nginx
-      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/nginx-health"]
       interval: 30s
