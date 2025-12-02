@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardContent, Badge, Skeleton } from '@/components/ui';
-import { formatBytes, formatRelativeTime, getFileIcon } from '@/lib/utils';
+import { formatBytes, formatRelativeTime } from '@/lib/utils';
 import { DashboardStats } from '@/types';
 import {
   AreaChart,
@@ -90,6 +90,13 @@ function ActivityItem({
   );
 }
 
+// Format day name from date
+function formatDayName(dateStr: string): string {
+  const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const date = new Date(dateStr);
+  return days[date.getDay()];
+}
+
 export default function DashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
@@ -101,16 +108,15 @@ export default function DashboardPage() {
     retry: false, // Don't retry on error
   });
 
-  // Mock chart data - in production, this would come from the API
-  const chartData = [
-    { name: 'Lun', downloads: 45 },
-    { name: 'Mar', downloads: 52 },
-    { name: 'Mer', downloads: 38 },
-    { name: 'Jeu', downloads: 65 },
-    { name: 'Ven', downloads: 72 },
-    { name: 'Sam', downloads: 35 },
-    { name: 'Dim', downloads: 28 },
-  ];
+  // Transform daily stats to chart data
+  const chartData = data?.dailyStats?.map(stat => ({
+    name: formatDayName(stat.date),
+    downloads: stat.downloads,
+    uploads: stat.uploads
+  })) || [];
+
+  // Calculate total downloads from the week for trend
+  const weeklyDownloads = chartData.reduce((sum, day) => sum + day.downloads, 0);
 
   if (isLoading) {
     return (
@@ -179,8 +185,12 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-white">Téléchargements</h3>
-                <p className="text-sm text-gray-500">7 derniers jours</p>
+                <h3 className="text-lg font-semibold text-white">Activité</h3>
+                <p className="text-sm text-gray-500">
+                  {weeklyDownloads > 0 
+                    ? `${weeklyDownloads} téléchargements cette semaine` 
+                    : '7 derniers jours'}
+                </p>
               </div>
               <Badge variant="success">
                 <Activity className="w-3 h-3 mr-1" />
@@ -188,42 +198,70 @@ export default function DashboardPage() {
               </Badge>
             </div>
             <div className="h-64 w-full" style={{ minHeight: '256px', minWidth: '200px' }}>
-              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#9ca3af', fontSize: 12 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#9ca3af', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1f2937',
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#fff',
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="downloads"
-                    stroke="#6366f1"
-                    strokeWidth={2}
-                    fill="url(#colorDownloads)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorUploads" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#fff',
+                      }}
+                      formatter={(value: number, name: string) => [
+                        value,
+                        name === 'downloads' ? 'Téléchargements' : 'Uploads'
+                      ]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="downloads"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      fill="url(#colorDownloads)"
+                      name="downloads"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="uploads"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fill="url(#colorUploads)"
+                      name="uploads"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Aucune activité enregistrée</p>
+                    <p className="text-sm mt-1">Les statistiques apparaîtront ici</p>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
