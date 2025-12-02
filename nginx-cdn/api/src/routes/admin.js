@@ -61,12 +61,13 @@ function handleValidationErrors(req, res, next) {
  */
 router.get('/dashboard', async (req, res) => {
     try {
-        const [fileStats, tokenStats, logStats, recentLogs, topFiles] = await Promise.all([
+        const [fileStats, tokenStats, logStats, recentLogs, topFiles, dailyStats] = await Promise.all([
             File.getStats(),
             Token.getStats(),
             AccessLog.getStats(),
             AccessLog.findAll({ limit: 10 }),
-            AccessLog.getTopFiles(5)
+            AccessLog.getTopFiles(5),
+            AccessLog.getDailyStats(7) // Get last 7 days stats
         ]);
         
         res.json({
@@ -96,7 +97,8 @@ router.get('/dashboard', async (req, res) => {
                     statusCode: log.status_code,
                     createdAt: log.created_at
                 })),
-                topFiles
+                topFiles,
+                dailyStats: dailyStats || []
             }
         });
     } catch (error) {

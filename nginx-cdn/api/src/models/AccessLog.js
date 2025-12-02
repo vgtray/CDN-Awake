@@ -297,6 +297,45 @@ class AccessLog {
         const result = await query(sql);
         return result.rowCount;
     }
+
+    /**
+     * Get daily stats for the last N days
+     */
+    static async getDailyStats(days = 7) {
+        const sql = `
+            WITH date_series AS (
+                SELECT generate_series(
+                    CURRENT_DATE - INTERVAL '${parseInt(days) - 1} days',
+                    CURRENT_DATE,
+                    '1 day'::interval
+                )::date AS date
+            )
+            SELECT 
+                ds.date,
+                COALESCE(COUNT(l.id) FILTER (WHERE l.action = 'download'), 0)::integer as downloads,
+                COALESCE(COUNT(l.id) FILTER (WHERE l.action = 'upload'), 0)::integer as uploads,
+                COALESCE(COUNT(DISTINCT l.ip_address), 0)::integer as unique_visitors,
+                COALESCE(COUNT(l.id), 0)::integer as total_requests
+            FROM date_series ds
+            LEFT JOIN access_logs l ON DATE(l.created_at) = ds.date
+            GROUP BY ds.date
+            ORDER BY ds.date ASC
+        `;
+        
+        try {
+            const result = await query(sql);
+            return result.rows.map(row => ({
+                date: row.date,
+                downloads: parseInt(row.downloads) || 0,
+                uploads: parseInt(row.uploads) || 0,
+                uniqueVisitors: parseInt(row.unique_visitors) || 0,
+                totalRequests: parseInt(row.total_requests) || 0
+            }));
+        } catch (error) {
+            logger.error('Failed to get daily stats:', error);
+            return [];
+        }
+    }
 }
 
 module.exports = AccessLog;

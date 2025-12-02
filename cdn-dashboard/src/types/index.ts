@@ -31,15 +31,22 @@ export interface LoginCredentials {
 // Files
 export interface CDNFile {
   id: string;
-  original_name: string;
-  filename: string;
-  mime_type: string;
+  original_name?: string;
+  originalName?: string;
+  filename?: string;
+  storedName?: string;
+  mime_type?: string;
+  mimeType?: string;
   size: number;
   checksum: string;
-  uploaded_by: string | null;
-  created_at: string;
-  updated_at: string;
+  uploaded_by?: string | null;
+  uploadedBy?: string | null;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
   download_count?: number;
+  activeTokens?: number;
 }
 
 export interface FileUploadResponse {
@@ -91,6 +98,14 @@ export interface APIKey {
 }
 
 // Dashboard Stats
+export interface DailyStat {
+  date: string;
+  downloads: number;
+  uploads: number;
+  uniqueVisitors: number;
+  totalRequests: number;
+}
+
 export interface DashboardStats {
   files: {
     total: number;
@@ -110,6 +125,7 @@ export interface DashboardStats {
   };
   recentActivity: RecentActivity[];
   topFiles: TopFile[];
+  dailyStats?: DailyStat[];
 }
 
 export interface RecentActivity {

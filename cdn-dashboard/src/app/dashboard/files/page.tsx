@@ -93,7 +93,7 @@ export default function FilesPage() {
   });
 
   const handleDelete = (file: CDNFile) => {
-    if (window.confirm(`Supprimer "${file.original_name}" ?`)) {
+    if (window.confirm(`Supprimer "${file.original_name || file.originalName}" ?`)) {
       deleteMutation.mutate(file.id);
     }
   };
@@ -175,18 +175,18 @@ export default function FilesPage() {
                   <tr key={file.id} className="hover:bg-gray-800/50 transition-colors">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getFileIcon(file.mime_type)}</span>
+                        <span className="text-2xl">{getFileIcon(file.mime_type || file.mimeType)}</span>
                         <div>
-                          <p className="text-white font-medium">{file.original_name}</p>
-                          <p className="text-sm text-gray-500">{file.filename}</p>
+                          <p className="text-white font-medium">{file.original_name || file.originalName}</p>
+                          <p className="text-sm text-gray-500">{file.filename || file.storedName}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <Badge variant="default">{file.mime_type?.split('/')[1] || 'unknown'}</Badge>
+                      <Badge variant="default">{(file.mime_type || file.mimeType)?.split('/')[1] || 'unknown'}</Badge>
                     </td>
                     <td className="py-4 px-6 text-gray-300">{formatBytes(file.size)}</td>
-                    <td className="py-4 px-6 text-gray-300">{formatDate(file.created_at)}</td>
+                    <td className="py-4 px-6 text-gray-300">{formatDate(file.created_at || file.createdAt || new Date().toISOString())}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-2">
                         <Button
@@ -318,10 +318,10 @@ export default function FilesPage() {
           <div className="p-4 bg-gray-800/50 rounded-xl">
             <div className="flex items-center gap-3">
               <span className="text-2xl">
-                {selectedFile && getFileIcon(selectedFile.mime_type)}
+                {selectedFile && getFileIcon(selectedFile.mime_type || selectedFile.mimeType)}
               </span>
               <div>
-                <p className="text-white font-medium">{selectedFile?.original_name}</p>
+                <p className="text-white font-medium">{selectedFile?.original_name || selectedFile?.originalName}</p>
                 <p className="text-sm text-gray-500">
                   {selectedFile && formatBytes(selectedFile.size)}
                 </p>
