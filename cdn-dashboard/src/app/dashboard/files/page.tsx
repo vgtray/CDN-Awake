@@ -10,9 +10,10 @@ import {
   Key as KeyIcon
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton } from '@/components/ui';
+import { AnimatedCard, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton, PageTransition } from '@/components/ui';
 import { formatBytes, formatDate, getFileIcon, copyToClipboard } from '@/lib/utils';
 import { CDNFile } from '@/types';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useDropzone } from 'react-dropzone';
 
@@ -114,12 +115,12 @@ export default function FilesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Fichiers</h1>
-          <p className="text-gray-400 mt-1">Gérez vos fichiers uploadés</p>
+          <h1 className="text-2xl font-bold text-zinc-100">Fichiers</h1>
+          <p className="text-zinc-500 mt-1">Gérez vos fichiers uploadés</p>
         </div>
         <Button onClick={() => setIsUploadModalOpen(true)}>
           <Upload className="w-4 h-4 mr-2" />
@@ -128,27 +129,27 @@ export default function FilesPage() {
       </div>
 
       {/* Search & Filters */}
-      <Card>
+      <AnimatedCard delay={0.1}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
               <input
                 type="text"
                 placeholder="Rechercher un fichier..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
               />
             </div>
           </div>
         </CardContent>
-      </Card>
+      </AnimatedCard>
 
       {/* Files List */}
-      <Card>
+      <AnimatedCard delay={0.2}>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-zinc-100">
             {data?.pagination?.total || 0} fichier(s)
           </h3>
         </CardHeader>
@@ -162,31 +163,37 @@ export default function FilesPage() {
           ) : data?.data?.length > 0 ? (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Fichier</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Type</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Taille</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Date</th>
-                  <th className="text-right py-3 px-6 text-sm font-medium text-gray-400">Actions</th>
+                <tr className="border-b border-zinc-800/50">
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Fichier</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Type</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Taille</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Date</th>
+                  <th className="text-right py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
-                {data.data.map((file: CDNFile) => (
-                  <tr key={file.id} className="hover:bg-gray-800/50 transition-colors">
+              <tbody className="divide-y divide-zinc-800/30">
+                {data.data.map((file: CDNFile, index: number) => (
+                  <motion.tr 
+                    key={file.id} 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.03 }}
+                    className="hover:bg-zinc-800/30 transition-colors group"
+                  >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getFileIcon(file.mime_type || file.mimeType)}</span>
+                        <span className="text-xl opacity-60 group-hover:opacity-100 transition-opacity">{getFileIcon(file.mime_type || file.mimeType)}</span>
                         <div>
-                          <p className="text-white font-medium">{file.original_name || file.originalName}</p>
-                          <p className="text-sm text-gray-500">{file.filename || file.storedName}</p>
+                          <p className="text-zinc-200 font-medium group-hover:text-zinc-100 transition-colors">{file.original_name || file.originalName}</p>
+                          <p className="text-xs text-zinc-600">{file.filename || file.storedName}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
                       <Badge variant="default">{(file.mime_type || file.mimeType)?.split('/')[1] || 'unknown'}</Badge>
                     </td>
-                    <td className="py-4 px-6 text-gray-300">{formatBytes(file.size)}</td>
-                    <td className="py-4 px-6 text-gray-300">{formatDate(file.created_at || file.createdAt || new Date().toISOString())}</td>
+                    <td className="py-4 px-6 text-zinc-400 text-sm">{formatBytes(file.size)}</td>
+                    <td className="py-4 px-6 text-zinc-400 text-sm">{formatDate(file.created_at || file.createdAt || new Date().toISOString())}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-2">
                         <Button
@@ -218,13 +225,13 @@ export default function FilesPage() {
                         </Button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           ) : (
             <EmptyState
-              icon={<Upload className="w-8 h-8 text-gray-600" />}
+              icon={<Upload className="w-8 h-8 text-zinc-600" />}
               title="Aucun fichier"
               description="Uploadez votre premier fichier pour commencer"
               action={
@@ -239,8 +246,8 @@ export default function FilesPage() {
 
         {/* Pagination */}
         {data?.pagination && data.pagination.totalPages > 1 && (
-          <div className="p-4 border-t border-gray-800 flex items-center justify-between">
-            <p className="text-sm text-gray-400">
+          <div className="p-4 border-t border-zinc-800/50 flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
               Page {page} sur {data.pagination.totalPages}
             </p>
             <div className="flex gap-2">
@@ -263,7 +270,7 @@ export default function FilesPage() {
             </div>
           </div>
         )}
-      </Card>
+      </AnimatedCard>
 
       {/* Upload Modal */}
       <Modal
@@ -277,17 +284,17 @@ export default function FilesPage() {
           className={`border-2 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
             isDragActive
               ? 'border-indigo-500 bg-indigo-500/10'
-              : 'border-gray-700 hover:border-gray-600'
+              : 'border-zinc-700/50 hover:border-zinc-600/50 hover:bg-zinc-800/30'
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="w-12 h-12 mx-auto text-gray-500 mb-4" />
+          <Upload className="w-12 h-12 mx-auto text-zinc-600 mb-4" />
           {isDragActive ? (
-            <p className="text-white">Déposez les fichiers ici...</p>
+            <p className="text-zinc-100">Déposez les fichiers ici...</p>
           ) : (
             <>
-              <p className="text-white mb-2">Glissez-déposez vos fichiers ici</p>
-              <p className="text-sm text-gray-500">ou cliquez pour sélectionner</p>
+              <p className="text-zinc-200 mb-2">Glissez-déposez vos fichiers ici</p>
+              <p className="text-sm text-zinc-500">ou cliquez pour sélectionner</p>
             </>
           )}
         </div>
@@ -295,13 +302,14 @@ export default function FilesPage() {
         {uploadingFiles.length > 0 && (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-400">Upload en cours...</p>
-              <p className="text-sm text-white">{Math.round(uploadProgress)}%</p>
+              <p className="text-sm text-zinc-500">Upload en cours...</p>
+              <p className="text-sm text-zinc-100">{Math.round(uploadProgress)}%</p>
             </div>
-            <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all"
-                style={{ width: `${uploadProgress}%` }}
+            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${uploadProgress}%` }}
+                className="h-full bg-gradient-to-r from-indigo-500 to-violet-600"
               />
             </div>
           </div>
@@ -315,14 +323,14 @@ export default function FilesPage() {
         title="Créer un token d'accès"
       >
         <div className="space-y-4">
-          <div className="p-4 bg-gray-800/50 rounded-xl">
+          <div className="p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">
+              <span className="text-xl opacity-70">
                 {selectedFile && getFileIcon(selectedFile.mime_type || selectedFile.mimeType)}
               </span>
               <div>
-                <p className="text-white font-medium">{selectedFile?.original_name || selectedFile?.originalName}</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-zinc-200 font-medium">{selectedFile?.original_name || selectedFile?.originalName}</p>
+                <p className="text-sm text-zinc-500">
                   {selectedFile && formatBytes(selectedFile.size)}
                 </p>
               </div>
@@ -366,6 +374,6 @@ export default function FilesPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </PageTransition>
   );
 }

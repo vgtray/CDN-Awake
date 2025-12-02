@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { 
   Key,
   Plus,
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
-import { Card, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton } from '@/components/ui';
+import { Card, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton, PageTransition } from '@/components/ui';
 import { formatDate, copyToClipboard } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
@@ -113,31 +114,31 @@ export default function APIKeysPage() {
   // Non-superadmin users can't see this page
   if (!isSuperadmin) {
     return (
-      <div className="space-y-6">
+      <PageTransition className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Clés API</h1>
-          <p className="text-gray-400 mt-1">Gestion des clés d&apos;accès</p>
+          <p className="text-zinc-400 mt-1">Gestion des clés d&apos;accès</p>
         </div>
         <Card>
           <CardContent className="p-12">
             <EmptyState
-              icon={<Shield className="w-8 h-8 text-gray-600" />}
+              icon={<Shield className="w-8 h-8 text-zinc-600" />}
               title="Accès restreint"
               description="Seuls les super administrateurs peuvent gérer les clés API"
             />
           </CardContent>
         </Card>
-      </div>
+      </PageTransition>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Clés API</h1>
-          <p className="text-gray-400 mt-1">Gérez vos clés d&apos;accès programmatique</p>
+          <p className="text-zinc-400 mt-1">Gérez vos clés d&apos;accès programmatique</p>
         </div>
         <Button onClick={() => setIsCreateKeyModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -157,18 +158,24 @@ export default function APIKeysPage() {
           ) : apiKeysData?.data?.length > 0 ? (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Nom</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Préfixe</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Permissions</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Dernière utilisation</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Expiration</th>
-                  <th className="text-right py-3 px-6 text-sm font-medium text-gray-400">Actions</th>
+                <tr className="border-b border-zinc-800">
+                  <th className="text-left py-3 px-6 text-sm font-medium text-zinc-400">Nom</th>
+                  <th className="text-left py-3 px-6 text-sm font-medium text-zinc-400">Préfixe</th>
+                  <th className="text-left py-3 px-6 text-sm font-medium text-zinc-400">Permissions</th>
+                  <th className="text-left py-3 px-6 text-sm font-medium text-zinc-400">Dernière utilisation</th>
+                  <th className="text-left py-3 px-6 text-sm font-medium text-zinc-400">Expiration</th>
+                  <th className="text-right py-3 px-6 text-sm font-medium text-zinc-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
-                {apiKeysData.data.map((apiKey: APIKey) => (
-                  <tr key={apiKey.id} className="hover:bg-gray-800/50 transition-colors">
+              <tbody className="divide-y divide-zinc-800">
+                {apiKeysData.data.map((apiKey: APIKey, index: number) => (
+                  <motion.tr
+                    key={apiKey.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                    className="hover:bg-zinc-800/50 transition-colors"
+                  >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
@@ -176,14 +183,14 @@ export default function APIKeysPage() {
                         </div>
                         <div>
                           <p className="text-white font-medium">{apiKey.name}</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-zinc-500">
                             Créée le {formatDate(apiKey.created_at, false)}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <code className="px-2 py-1 bg-gray-800 rounded text-gray-300 text-sm">
+                      <code className="px-2 py-1 bg-zinc-800 rounded text-zinc-300 text-sm">
                         {apiKey.key_prefix}...
                       </code>
                     </td>
@@ -198,16 +205,16 @@ export default function APIKeysPage() {
                     </td>
                     <td className="py-4 px-6">
                       {apiKey.last_used_at ? (
-                        <span className="text-gray-300">
+                        <span className="text-zinc-300">
                           {formatDate(apiKey.last_used_at, false)}
                         </span>
                       ) : (
-                        <span className="text-gray-500">Jamais</span>
+                        <span className="text-zinc-500">Jamais</span>
                       )}
                     </td>
                     <td className="py-4 px-6">
                       {apiKey.expires_at ? (
-                        <span className="text-gray-300">
+                        <span className="text-zinc-300">
                           {formatDate(apiKey.expires_at, false)}
                         </span>
                       ) : (
@@ -230,14 +237,14 @@ export default function APIKeysPage() {
                         </Button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           ) : (
             <div className="p-12">
               <EmptyState
-                icon={<Key className="w-8 h-8 text-gray-600" />}
+                icon={<Key className="w-8 h-8 text-zinc-600" />}
                 title="Aucune clé API"
                 description="Créez une clé pour permettre l'accès programmatique à votre CDN"
                 action={
@@ -253,36 +260,42 @@ export default function APIKeysPage() {
       </Card>
 
       {/* Info Card */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Shield className="w-5 h-5 text-indigo-400" />
-            À propos des clés API
-          </h3>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="p-4 bg-gray-800/50 rounded-xl">
-              <h4 className="font-medium text-white mb-2">Permissions disponibles</h4>
-              <ul className="space-y-1 text-gray-400">
-                <li><Badge variant="default" className="mr-2">read</Badge> Lecture des fichiers</li>
-                <li><Badge variant="default" className="mr-2">upload</Badge> Upload de fichiers</li>
-                <li><Badge variant="default" className="mr-2">delete</Badge> Suppression de fichiers</li>
-                <li><Badge variant="default" className="mr-2">admin</Badge> Accès administrateur</li>
-              </ul>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Shield className="w-5 h-5 text-indigo-400" />
+              À propos des clés API
+            </h3>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="p-4 bg-zinc-800/50 rounded-xl">
+                <h4 className="font-medium text-white mb-2">Permissions disponibles</h4>
+                <ul className="space-y-1 text-zinc-400">
+                  <li><Badge variant="default" className="mr-2">read</Badge> Lecture des fichiers</li>
+                  <li><Badge variant="default" className="mr-2">upload</Badge> Upload de fichiers</li>
+                  <li><Badge variant="default" className="mr-2">delete</Badge> Suppression de fichiers</li>
+                  <li><Badge variant="default" className="mr-2">admin</Badge> Accès administrateur</li>
+                </ul>
+              </div>
+              <div className="p-4 bg-zinc-800/50 rounded-xl">
+                <h4 className="font-medium text-white mb-2">Bonnes pratiques</h4>
+                <ul className="space-y-1 text-zinc-400">
+                  <li>• Utilisez des clés distinctes par application</li>
+                  <li>• Définissez une date d&apos;expiration</li>
+                  <li>• Limitez les permissions au strict nécessaire</li>
+                  <li>• Révoquée les clés inutilisées</li>
+                </ul>
+              </div>
             </div>
-            <div className="p-4 bg-gray-800/50 rounded-xl">
-              <h4 className="font-medium text-white mb-2">Bonnes pratiques</h4>
-              <ul className="space-y-1 text-gray-400">
-                <li>• Utilisez des clés distinctes par application</li>
-                <li>• Définissez une date d&apos;expiration</li>
-                <li>• Limitez les permissions au strict nécessaire</li>
-                <li>• Révoquée les clés inutilisées</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Create API Key Modal */}
       <Modal
@@ -297,7 +310,7 @@ export default function APIKeysPage() {
                 <CheckCircle className="w-5 h-5 text-emerald-400" />
                 <p className="text-emerald-400 font-medium">Clé créée avec succès</p>
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-zinc-400">
                 Copiez cette clé maintenant. Elle ne sera plus affichée.
               </p>
             </div>
@@ -307,7 +320,7 @@ export default function APIKeysPage() {
                 type={showKey ? 'text' : 'password'}
                 value={createdKey}
                 readOnly
-                className="w-full px-4 py-3 pr-24 rounded-xl bg-gray-800/50 border border-gray-700 text-white font-mono text-sm"
+                className="w-full px-4 py-3 pr-24 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white font-mono text-sm"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                 <Button
@@ -351,21 +364,23 @@ export default function APIKeysPage() {
             />
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Permissions</label>
+              <label className="text-sm font-medium text-zinc-300">Permissions</label>
               <div className="flex gap-2 flex-wrap">
                 {['read', 'upload', 'delete', 'admin'].map((perm) => (
-                  <button
+                  <motion.button
                     key={perm}
                     type="button"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => togglePermission(perm)}
                     className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${
                       newKeyPermissions.includes(perm)
                         ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                        : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800'
                     }`}
                   >
                     {perm}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -390,6 +405,6 @@ export default function APIKeysPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </PageTransition>
   );
 }

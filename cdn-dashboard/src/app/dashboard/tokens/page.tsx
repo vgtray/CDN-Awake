@@ -13,9 +13,10 @@ import {
   Plus
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton } from '@/components/ui';
+import { AnimatedCard, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton, PageTransition } from '@/components/ui';
 import { formatDate, formatRelativeTime, copyToClipboard, generateDownloadUrl } from '@/lib/utils';
 import { AccessToken } from '@/types';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 export default function TokensPage() {
@@ -114,12 +115,12 @@ export default function TokensPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Tokens d&apos;accès</h1>
-          <p className="text-gray-400 mt-1">Gérez les tokens de téléchargement</p>
+          <h1 className="text-2xl font-bold text-zinc-100">Tokens d&apos;accès</h1>
+          <p className="text-zinc-500 mt-1">Gérez les tokens de téléchargement</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -128,27 +129,27 @@ export default function TokensPage() {
       </div>
 
       {/* Search & Filters */}
-      <Card>
+      <AnimatedCard delay={0.1}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
               <input
                 type="text"
                 placeholder="Rechercher par token ou ID fichier..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
               />
             </div>
           </div>
         </CardContent>
-      </Card>
+      </AnimatedCard>
 
       {/* Tokens List */}
-      <Card>
+      <AnimatedCard delay={0.2}>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-zinc-100">
             {data?.pagination?.total || 0} token(s)
           </h3>
         </CardHeader>
@@ -162,30 +163,36 @@ export default function TokensPage() {
           ) : filteredTokens?.length > 0 ? (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Token</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Statut</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Téléchargements</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Expiration</th>
-                  <th className="text-left py-3 px-6 text-sm font-medium text-gray-400">Créé</th>
-                  <th className="text-right py-3 px-6 text-sm font-medium text-gray-400">Actions</th>
+                <tr className="border-b border-zinc-800/50">
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Token</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Statut</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Téléchargements</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Expiration</th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Créé</th>
+                  <th className="text-right py-3 px-6 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
-                {filteredTokens.map((token: AccessToken) => {
+              <tbody className="divide-y divide-zinc-800/30">
+                {filteredTokens.map((token: AccessToken, index: number) => {
                   const { label, variant } = getTokenStatus(token);
                   return (
-                    <tr key={token.id} className="hover:bg-gray-800/50 transition-colors">
+                    <motion.tr 
+                      key={token.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 + index * 0.03 }}
+                      className="hover:bg-zinc-800/30 transition-colors group"
+                    >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center border border-indigo-500/20">
                             <Key className="w-5 h-5 text-indigo-400" />
                           </div>
                           <div>
-                            <p className="text-white font-mono text-sm">
+                            <p className="text-zinc-200 font-mono text-sm">
                               {token.token?.slice(0, 16) || 'N/A'}...
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-zinc-600">
                               {token.fileName || `Fichier: ${token.fileId?.slice(0, 8) || 'N/A'}...`}
                             </p>
                           </div>
@@ -196,20 +203,20 @@ export default function TokensPage() {
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
-                          <Download className="w-4 h-4 text-gray-500" />
-                          <span className="text-white">{token.downloadCount ?? 0}</span>
-                          <span className="text-gray-500">/ {token.maxDownloads ?? 0}</span>
+                          <Download className="w-4 h-4 text-zinc-600" />
+                          <span className="text-zinc-200">{token.downloadCount ?? 0}</span>
+                          <span className="text-zinc-600">/ {token.maxDownloads ?? 0}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-300">
+                          <Clock className="w-4 h-4 text-zinc-600" />
+                          <span className="text-zinc-400 text-sm">
                             {formatRelativeTime(token.expiresAt)}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-6 text-gray-300">
+                      <td className="py-4 px-6 text-zinc-400 text-sm">
                         {formatDate(token.createdAt, false)}
                       </td>
                       <td className="py-4 px-6">
@@ -232,14 +239,14 @@ export default function TokensPage() {
                           </Button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
               </tbody>
             </table>
           ) : (
             <EmptyState
-              icon={<Key className="w-8 h-8 text-gray-600" />}
+              icon={<Key className="w-8 h-8 text-zinc-600" />}
               title="Aucun token"
               description="Créez un token pour partager un fichier"
               action={
@@ -254,8 +261,8 @@ export default function TokensPage() {
 
         {/* Pagination */}
         {data?.pagination && data.pagination.totalPages > 1 && (
-          <div className="p-4 border-t border-gray-800 flex items-center justify-between">
-            <p className="text-sm text-gray-400">
+          <div className="p-4 border-t border-zinc-800/50 flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
               Page {page} sur {data.pagination.totalPages}
             </p>
             <div className="flex gap-2">
@@ -278,7 +285,7 @@ export default function TokensPage() {
             </div>
           </div>
         )}
-      </Card>
+      </AnimatedCard>
 
       {/* Create Token Modal */}
       <Modal
@@ -313,15 +320,15 @@ export default function TokensPage() {
             max={1000}
           />
 
-          <div className="p-4 bg-gray-800/50 rounded-xl">
+          <div className="p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0 border border-indigo-500/30">
                 <CheckCircle className="w-4 h-4 text-indigo-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-300">
-                  Le token sera valide pendant <strong className="text-white">{tokenExpiry} heures</strong> et 
-                  permettra <strong className="text-white">{maxDownloads} téléchargements</strong>.
+                <p className="text-sm text-zinc-400">
+                  Le token sera valide pendant <strong className="text-zinc-100">{tokenExpiry} heures</strong> et 
+                  permettra <strong className="text-zinc-100">{maxDownloads} téléchargements</strong>.
                 </p>
               </div>
             </div>
@@ -346,6 +353,6 @@ export default function TokensPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </PageTransition>
   );
 }

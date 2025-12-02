@@ -8,12 +8,14 @@ import {
   TrendingUp,
   HardDrive,
   Activity,
-  Clock
+  Clock,
+  ArrowUpRight
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { Card, CardContent, Badge, Skeleton } from '@/components/ui';
+import { AnimatedCard, AnimatedNumber, Badge, Skeleton } from '@/components/ui';
 import { formatBytes, formatRelativeTime } from '@/lib/utils';
 import { DashboardStats } from '@/types';
+import { motion } from 'framer-motion';
 import {
   AreaChart,
   Area,
@@ -23,7 +25,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// Stats Card Component
+// Animated Stats Card Component
 function StatsCard({
   title,
   value,
@@ -31,38 +33,48 @@ function StatsCard({
   icon: Icon,
   trend,
   gradient,
+  delay = 0,
 }: {
   title: string;
-  value: string | number;
+  value: number;
   subtitle?: string;
   icon: React.ElementType;
   trend?: { value: number; label: string };
   gradient: string;
+  delay?: number;
 }) {
   return (
-    <Card className="relative overflow-hidden">
-      <CardContent className="p-6">
+    <AnimatedCard delay={delay} glow="indigo">
+      <div className="p-6">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-400">{title}</p>
-            <p className="text-3xl font-bold text-white mt-2">{value}</p>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-zinc-400">{title}</p>
+            <div className="text-3xl font-bold text-zinc-100">
+              <AnimatedNumber value={value} />
+            </div>
             {subtitle && (
-              <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+              <p className="text-sm text-zinc-500">{subtitle}</p>
             )}
             {trend && (
-              <div className="flex items-center gap-1 mt-2">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm text-emerald-400">+{trend.value}%</span>
-                <span className="text-sm text-gray-500">{trend.label}</span>
+              <div className="flex items-center gap-1.5 mt-2">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+                  <span className="text-xs font-medium text-emerald-400">+{trend.value}%</span>
+                </div>
+                <span className="text-xs text-zinc-500">{trend.label}</span>
               </div>
             )}
           </div>
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient}`}>
+          <motion.div 
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}
+            style={{ boxShadow: `0 8px 24px -8px ${gradient.includes('indigo') ? 'rgba(99,102,241,0.4)' : gradient.includes('emerald') ? 'rgba(16,185,129,0.4)' : gradient.includes('amber') ? 'rgba(245,158,11,0.4)' : 'rgba(236,72,153,0.4)'}` }}
+          >
             <Icon className="w-6 h-6 text-white" />
-          </div>
+          </motion.div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </AnimatedCard>
   );
 }
 
@@ -72,21 +84,28 @@ function ActivityItem({
   title,
   description,
   time,
+  index = 0,
 }: {
   icon: string;
   title: string;
   description: string;
   time: string;
+  index?: number;
 }) {
   return (
-    <div className="flex items-start gap-4 py-3">
-      <div className="text-2xl">{icon}</div>
+    <motion.div 
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="flex items-start gap-4 py-3 group"
+    >
+      <div className="text-xl opacity-70 group-hover:opacity-100 transition-opacity">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">{title}</p>
-        <p className="text-sm text-gray-500 truncate">{description}</p>
+        <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-zinc-100 transition-colors">{title}</p>
+        <p className="text-xs text-zinc-500 truncate">{description}</p>
       </div>
-      <p className="text-xs text-gray-500 whitespace-nowrap">{time}</p>
-    </div>
+      <p className="text-[10px] text-zinc-600 whitespace-nowrap font-medium">{time}</p>
+    </motion.div>
   );
 }
 
@@ -139,12 +158,21 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 mt-1">Vue d&apos;ensemble de votre CDN</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
+        <p className="text-zinc-500 mt-1">Vue d&apos;ensemble de votre CDN</p>
+      </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -153,14 +181,16 @@ export default function DashboardPage() {
           value={data?.files.total || 0}
           subtitle={formatBytes(data?.files.totalSize || 0)}
           icon={Files}
-          gradient="from-indigo-500 to-purple-600"
+          gradient="from-indigo-500 to-violet-600"
+          delay={0}
         />
         <StatsCard
           title="Tokens Actifs"
           value={data?.tokens?.active || 0}
           subtitle={`${data?.tokens?.total || 0} total`}
           icon={Key}
-          gradient="from-emerald-500 to-green-600"
+          gradient="from-emerald-500 to-teal-600"
+          delay={0.05}
         />
         <StatsCard
           title="Téléchargements"
@@ -168,31 +198,33 @@ export default function DashboardPage() {
           subtitle={`${data?.access?.uniqueIPs || 0} IPs uniques`}
           icon={Download}
           gradient="from-amber-500 to-orange-600"
+          delay={0.1}
         />
         <StatsCard
           title="Stockage"
-          value={formatBytes(data?.files.totalSize || 0)}
-          subtitle={`${data?.files.total || 0} fichiers`}
+          value={data?.files.total || 0}
+          subtitle={formatBytes(data?.files.totalSize || 0)}
           icon={HardDrive}
           gradient="from-pink-500 to-rose-600"
+          delay={0.15}
         />
       </div>
 
       {/* Charts & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Downloads Chart */}
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
+        <AnimatedCard delay={0.2} className="lg:col-span-2">
+          <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-white">Activité</h3>
-                <p className="text-sm text-gray-500">
+                <h3 className="text-lg font-semibold text-zinc-100">Activité</h3>
+                <p className="text-sm text-zinc-500">
                   {weeklyDownloads > 0 
                     ? `${weeklyDownloads} téléchargements cette semaine` 
                     : '7 derniers jours'}
                 </p>
               </div>
-              <Badge variant="success">
+              <Badge variant="success" className="animate-pulse-glow">
                 <Activity className="w-3 h-3 mr-1" />
                 En direct
               </Badge>
@@ -203,11 +235,11 @@ export default function DashboardPage() {
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorUploads" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
                         <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                       </linearGradient>
                     </defs>
@@ -215,20 +247,22 @@ export default function DashboardPage() {
                       dataKey="name" 
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                      tick={{ fill: '#71717a', fontSize: 11 }}
                     />
                     <YAxis 
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                      tick={{ fill: '#71717a', fontSize: 11 }}
                       allowDecimals={false}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
+                        backgroundColor: 'rgba(24, 24, 27, 0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '12px',
                         color: '#fff',
+                        backdropFilter: 'blur(8px)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                       }}
                       formatter={(value: number, name: string) => [
                         value,
@@ -254,26 +288,26 @@ export default function DashboardPage() {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-500">
+                <div className="h-full flex items-center justify-center text-zinc-500">
                   <div className="text-center">
-                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>Aucune activité enregistrée</p>
-                    <p className="text-sm mt-1">Les statistiques apparaîtront ici</p>
+                    <Activity className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                    <p className="font-medium">Aucune activité enregistrée</p>
+                    <p className="text-sm text-zinc-600 mt-1">Les statistiques apparaîtront ici</p>
                   </div>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </AnimatedCard>
 
         {/* Recent Activity */}
-        <Card>
-          <CardContent className="p-6">
+        <AnimatedCard delay={0.25}>
+          <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Activité récente</h3>
-              <Clock className="w-5 h-5 text-gray-500" />
+              <h3 className="text-lg font-semibold text-zinc-100">Activité récente</h3>
+              <Clock className="w-5 h-5 text-zinc-600" />
             </div>
-            <div className="divide-y divide-gray-800">
+            <div className="divide-y divide-zinc-800/50">
               {data?.recentActivity?.slice(0, 5).map((activity, index) => (
                 <ActivityItem
                   key={activity.id || index}
@@ -281,35 +315,42 @@ export default function DashboardPage() {
                   title={activity.fileName || 'Fichier inconnu'}
                   description={activity.ipAddress || 'IP inconnue'}
                   time={formatRelativeTime(activity.createdAt)}
+                  index={index}
                 />
               )) || (
-                <p className="text-gray-500 text-center py-8">Aucune activité récente</p>
+                <p className="text-zinc-500 text-center py-8">Aucune activité récente</p>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </AnimatedCard>
       </div>
 
       {/* Top Files */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Fichiers populaires</h3>
+      <AnimatedCard delay={0.3}>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-4">Fichiers populaires</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Fichier</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Type</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Téléchargements</th>
+                <tr className="border-b border-zinc-800/50">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Fichier</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Type</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Téléchargements</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-zinc-800/30">
                 {data?.topFiles?.map((item, index) => (
-                  <tr key={item.id || index} className="hover:bg-gray-800/50 transition-colors">
+                  <motion.tr 
+                    key={item.id || index} 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.05 }}
+                    className="hover:bg-zinc-800/30 transition-colors group"
+                  >
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">📄</span>
-                        <span className="text-white font-medium">
+                        <span className="text-lg opacity-60 group-hover:opacity-100 transition-opacity">📄</span>
+                        <span className="text-zinc-200 font-medium group-hover:text-zinc-100 transition-colors">
                           {item.original_name || 'Fichier inconnu'}
                         </span>
                       </div>
@@ -320,13 +361,13 @@ export default function DashboardPage() {
                       </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-white font-semibold">{item.access_count}</span>
-                      <span className="text-gray-500 ml-1">téléchargements</span>
+                      <span className="text-zinc-100 font-semibold">{item.access_count}</span>
+                      <span className="text-zinc-500 ml-1 text-sm">téléchargements</span>
                     </td>
-                  </tr>
+                  </motion.tr>
                 )) || (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-gray-500">
+                    <td colSpan={3} className="py-8 text-center text-zinc-500">
                       Aucun fichier téléchargé
                     </td>
                   </tr>
@@ -334,8 +375,8 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </AnimatedCard>
+    </motion.div>
   );
 }

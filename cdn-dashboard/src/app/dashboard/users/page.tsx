@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { 
   Users, 
   Search, 
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
-import { Card, CardContent, Button, Badge, Input, Modal, EmptyState, Skeleton } from '@/components/ui';
+import { Card, CardContent, Button, Badge, Input, Modal, EmptyState, Skeleton, PageTransition, StaggerContainer, StaggerItem } from '@/components/ui';
 import { formatDate, getInitials } from '@/lib/utils';
 import { AdminUser } from '@/types';
 import toast from 'react-hot-toast';
@@ -134,12 +135,12 @@ export default function UsersPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Utilisateurs</h1>
-          <p className="text-gray-400 mt-1">Gérez les administrateurs du CDN</p>
+          <p className="text-zinc-400 mt-1">Gérez les administrateurs du CDN</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <UserPlus className="w-4 h-4 mr-2" />
@@ -152,13 +153,13 @@ export default function UsersPage() {
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
               <input
                 type="text"
                 placeholder="Rechercher un utilisateur..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -173,87 +174,89 @@ export default function UsersPage() {
           ))}
         </div>
       ) : filteredUsers?.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredUsers.map((user: AdminUser) => (
-            <Card key={user.id} className="relative overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                      {getInitials(user.username)}
+            <StaggerItem key={user.id}>
+              <Card className="relative overflow-hidden h-full">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                        {getInitials(user.username)}
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">{user.username}</p>
+                        <p className="text-sm text-zinc-400">{user.email}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-semibold">{user.username}</p>
-                      <p className="text-sm text-gray-400">{user.email}</p>
+                    {user.id === currentUser?.id && (
+                      <Badge variant="info">Vous</Badge>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-zinc-400">Rôle</span>
+                      <Badge variant={user.role === 'superadmin' ? 'primary' : 'default'}>
+                        <Shield className="w-3 h-3 mr-1" />
+                        {user.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-zinc-400">Statut</span>
+                      <Badge variant={user.is_active ? 'success' : 'danger'}>
+                        {user.is_active ? (
+                          <>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Actif
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Inactif
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-zinc-400">Créé le</span>
+                      <span className="text-sm text-zinc-300">
+                        {formatDate(user.created_at, false)}
+                      </span>
                     </div>
                   </div>
-                  {user.id === currentUser?.id && (
-                    <Badge variant="info">Vous</Badge>
+
+                  {user.id !== currentUser?.id && (
+                    <div className="mt-4 pt-4 border-t border-zinc-800 flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleRoleChange(user)}
+                      >
+                        <Shield className="w-4 h-4 mr-1" />
+                        Rôle
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(user)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Rôle</span>
-                    <Badge variant={user.role === 'superadmin' ? 'primary' : 'default'}>
-                      <Shield className="w-3 h-3 mr-1" />
-                      {user.role === 'superadmin' ? 'Super Admin' : 'Admin'}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Statut</span>
-                    <Badge variant={user.is_active ? 'success' : 'danger'}>
-                      {user.is_active ? (
-                        <>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Actif
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-3 h-3 mr-1" />
-                          Inactif
-                        </>
-                      )}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Créé le</span>
-                    <span className="text-sm text-gray-300">
-                      {formatDate(user.created_at, false)}
-                    </span>
-                  </div>
-                </div>
-
-                {user.id !== currentUser?.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-800 flex gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleRoleChange(user)}
-                    >
-                      <Shield className="w-4 h-4 mr-1" />
-                      Rôle
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDelete(user)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       ) : (
         <Card>
           <EmptyState
-            icon={<Users className="w-8 h-8 text-gray-600" />}
+            icon={<Users className="w-8 h-8 text-zinc-600" />}
             title="Aucun utilisateur"
             description="Créez votre premier administrateur"
             action={
@@ -298,32 +301,36 @@ export default function UsersPage() {
           />
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Rôle</label>
+            <label className="text-sm font-medium text-zinc-300">Rôle</label>
             <div className="flex gap-3">
-              <button
+              <motion.button
                 type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setNewRole('admin')}
                 className={`flex-1 p-3 rounded-xl border transition-all ${
                   newRole === 'admin'
                     ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                    : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 <Shield className="w-5 h-5 mx-auto mb-1" />
                 <span className="text-sm">Admin</span>
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setNewRole('superadmin')}
                 className={`flex-1 p-3 rounded-xl border transition-all ${
                   newRole === 'superadmin'
                     ? 'border-purple-500 bg-purple-500/20 text-white'
-                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800'
+                    : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800'
                 }`}
               >
                 <Shield className="w-5 h-5 mx-auto mb-1" />
                 <span className="text-sm">Super Admin</span>
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -355,50 +362,54 @@ export default function UsersPage() {
       >
         <div className="space-y-4">
           {selectedUser && (
-            <div className="p-4 bg-gray-800/50 rounded-xl">
+            <div className="p-4 bg-zinc-800/50 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
                   {getInitials(selectedUser.username)}
                 </div>
                 <div>
                   <p className="text-white font-medium">{selectedUser.username}</p>
-                  <p className="text-sm text-gray-400">{selectedUser.email}</p>
+                  <p className="text-sm text-zinc-400">{selectedUser.email}</p>
                 </div>
               </div>
             </div>
           )}
 
-          <p className="text-sm text-gray-400">Sélectionnez le nouveau rôle:</p>
+          <p className="text-sm text-zinc-400">Sélectionnez le nouveau rôle:</p>
 
           <div className="flex gap-3">
-            <button
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => submitRoleChange('admin')}
               disabled={selectedUser?.role === 'admin' || updateRoleMutation.isPending}
               className={`flex-1 p-4 rounded-xl border transition-all ${
                 selectedUser?.role === 'admin'
                   ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                  : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
               } disabled:opacity-50`}
             >
               <Shield className="w-6 h-6 mx-auto mb-2" />
               <span className="block font-medium">Admin</span>
-              <span className="text-xs text-gray-500">Accès standard</span>
-            </button>
-            <button
+              <span className="text-xs text-zinc-500">Accès standard</span>
+            </motion.button>
+            <motion.button
               type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => submitRoleChange('superadmin')}
               disabled={selectedUser?.role === 'superadmin' || updateRoleMutation.isPending}
               className={`flex-1 p-4 rounded-xl border transition-all ${
                 selectedUser?.role === 'superadmin'
                   ? 'border-purple-500 bg-purple-500/20 text-white'
-                  : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
               } disabled:opacity-50`}
             >
               <Shield className="w-6 h-6 mx-auto mb-2" />
               <span className="block font-medium">Super Admin</span>
-              <span className="text-xs text-gray-500">Accès complet</span>
-            </button>
+              <span className="text-xs text-zinc-500">Accès complet</span>
+            </motion.button>
           </div>
 
           <Button
@@ -410,6 +421,6 @@ export default function UsersPage() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </PageTransition>
   );
 }
