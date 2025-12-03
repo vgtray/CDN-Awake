@@ -331,12 +331,12 @@ export default function FilesPage() {
   };
 
   return (
-    <PageTransition className="space-y-6">
+    <PageTransition className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Fichiers</h1>
-          <p className="text-zinc-500 mt-1">Gérez vos fichiers uploadés</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100">Fichiers</h1>
+          <p className="text-sm text-zinc-500 mt-1">Gérez vos fichiers uploadés</p>
         </div>
         <div className="flex items-center gap-2">
           {filteredFiles.length > 0 && (
@@ -390,8 +390,8 @@ export default function FilesPage() {
 
       {/* Search & Filters */}
       <AnimatedCard delay={0.1}>
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {/* Search */}
             <div className="relative flex-1 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
@@ -400,30 +400,31 @@ export default function FilesPage() {
                 placeholder="Rechercher un fichier..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-sm sm:text-base"
               />
             </div>
 
-            {/* Type Filter */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0">
-              {FILE_TYPE_FILTERS.map((filter) => (
-                <button
-                  key={filter.value}
-                  onClick={() => setTypeFilter(filter.value)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    typeFilter === filter.value
-                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                      : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-700/50'
-                  }`}
-                >
-                  {filter.icon}
-                  {filter.label}
-                </button>
-              ))}
-            </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+              {/* Type Filter */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-1 px-1">
+                {FILE_TYPE_FILTERS.map((filter) => (
+                  <button
+                    key={filter.value}
+                    onClick={() => setTypeFilter(filter.value)}
+                    className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                      typeFilter === filter.value
+                        ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                        : 'bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-700/50'
+                    }`}
+                  >
+                    {filter.icon}
+                    <span className="hidden sm:inline">{filter.label}</span>
+                  </button>
+                ))}
+              </div>
 
             {/* View Toggle */}
-            <div className="flex items-center gap-1 bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
+            <div className="flex items-center gap-1 bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50 ml-auto sm:ml-0">
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-md transition-all ${
@@ -441,19 +442,20 @@ export default function FilesPage() {
                 <Grid className="w-4 h-4" />
               </button>
             </div>
+            </div>
           </div>
         </CardContent>
       </AnimatedCard>
 
       {/* Files */}
       <AnimatedCard delay={0.2}>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <h3 className="text-lg font-semibold text-zinc-100">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className="text-base sm:text-lg font-semibold text-zinc-100">
             {filteredFiles.length} fichier(s)
           </h3>
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
-            <Filter className="w-4 h-4" />
-            <span>Trier par:</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-500 overflow-x-auto">
+            <Filter className="w-4 h-4 hidden sm:block" />
+            <span className="hidden sm:inline">Trier par:</span>
             <button
               onClick={() => toggleSort('created_at')}
               className={`flex items-center gap-1 px-2 py-1 rounded ${
@@ -587,7 +589,7 @@ export default function FilesPage() {
             </div>
           ) : (
             /* Grid View */
-            <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="p-4 sm:p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
               {filteredFiles.map((file: CDNFile, index: number) => {
                 const mimeType = file.mime_type || file.mimeType;
                 const isImage = mimeType?.startsWith('image/');

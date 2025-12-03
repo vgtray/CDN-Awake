@@ -3,6 +3,8 @@ services:
     build: ./services/postgres
     container_name: cdn-postgres
     restart: unless-stopped
+    ports:
+      - "5433:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-cdn_db}
       POSTGRES_USER: ${POSTGRES_USER:-cdn_user}

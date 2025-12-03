@@ -115,31 +115,32 @@ export default function TokensPage() {
   });
 
   return (
-    <PageTransition className="space-y-6">
+    <PageTransition className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Tokens d&apos;accès</h1>
-          <p className="text-zinc-500 mt-1">Gérez les tokens de téléchargement</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100">Tokens d&apos;accès</h1>
+          <p className="text-sm text-zinc-500 mt-1">Gérez les tokens de téléchargement</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Nouveau token
+          <span className="hidden sm:inline">Nouveau token</span>
+          <span className="sm:hidden">Nouveau</span>
         </Button>
       </div>
 
       {/* Search & Filters */}
       <AnimatedCard delay={0.1}>
-        <CardContent className="p-4">
+        <CardContent className="p-3 sm:p-4">
           <div className="flex items-center gap-4">
             <div className="relative flex-1 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
               <input
                 type="text"
-                placeholder="Rechercher par token ou ID fichier..."
+                placeholder="Rechercher..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-sm"
               />
             </div>
           </div>
@@ -149,7 +150,7 @@ export default function TokensPage() {
       {/* Tokens List */}
       <AnimatedCard delay={0.2}>
         <CardHeader>
-          <h3 className="text-lg font-semibold text-zinc-100">
+          <h3 className="text-base sm:text-lg font-semibold text-zinc-100">
             {data?.pagination?.total || 0} token(s)
           </h3>
         </CardHeader>

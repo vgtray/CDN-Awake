@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/sidebar';
+import { MobileNav } from '@/components/mobile-nav';
 import { useAuthStore } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -79,6 +80,7 @@ export default function DashboardLayout({
       </div>
       
       <Sidebar />
+      <MobileNav />
       
       <AnimatePresence mode="wait">
         <motion.main
@@ -89,10 +91,11 @@ export default function DashboardLayout({
           transition={{ duration: 0.3 }}
           className={cn(
             'transition-all duration-300',
-            'ml-64 min-h-screen relative z-10'
+            'lg:ml-64 min-h-screen relative z-10',
+            'pt-16 lg:pt-0'
           )}
         >
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             {children}
           </div>
         </motion.main>
