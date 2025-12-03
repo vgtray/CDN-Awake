@@ -6,7 +6,7 @@ import { Shield, User, Lock, Loader2, Eye, EyeOff, Sparkles } from 'lucide-react
 import { useAuthStore } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { toast, activity } from '@/lib/notifications';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,13 +52,14 @@ export default function LoginPage() {
     try {
       const success = await login(username, password);
       if (success) {
-        toast.success('Connexion réussie!');
+        toast.success('Connexion réussie!', `Bienvenue, ${username}`);
+        activity.login(username);
         router.push('/dashboard');
       } else {
-        toast.error('Identifiants incorrects');
+        toast.error('Identifiants incorrects', 'Vérifiez votre nom d\'utilisateur et mot de passe');
       }
     } catch {
-      toast.error('Erreur de connexion');
+      toast.error('Erreur de connexion', 'Le serveur est peut-être indisponible');
     } finally {
       setIsLoading(false);
     }
@@ -71,10 +72,10 @@ export default function LoginPage() {
     try {
       const response = await api.setup(setupData);
       if (response.success) {
-        toast.success('Compte admin créé! Connectez-vous maintenant.');
+        toast.success('Compte admin créé!', 'Vous pouvez maintenant vous connecter');
         setNeedsSetup(false);
       } else {
-        toast.error(response.message || 'Erreur lors de la création');
+        toast.error('Erreur lors de la création', response.message || 'Vérifiez les informations');
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

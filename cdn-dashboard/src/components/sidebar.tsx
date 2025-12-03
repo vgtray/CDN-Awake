@@ -13,12 +13,15 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore, useIsSuperadmin } from '@/lib/auth';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ActivityDropdown } from './notifications';
+import { useActivityStore } from '@/lib/notifications';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -313,6 +316,30 @@ export function Sidebar() {
 
       {/* User Section */}
       <div className="border-t border-zinc-800/50 p-4">
+        {/* Notification Button */}
+        <AnimatePresence mode="wait">
+          {!collapsed ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-between mb-4"
+            >
+              <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Notifications</span>
+              <ActivityDropdown />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center mb-4"
+            >
+              <ActivityDropdown />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div

@@ -9,13 +9,15 @@ import {
   HardDrive,
   Activity,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  RefreshCw
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { AnimatedCard, AnimatedNumber, Badge, Skeleton } from '@/components/ui';
+import { AnimatedCard, AnimatedNumber, Badge, Skeleton, Button } from '@/components/ui';
 import { formatBytes, formatRelativeTime } from '@/lib/utils';
 import { DashboardStats } from '@/types';
 import { motion } from 'framer-motion';
+import { useRealtime, ConnectionIndicator } from '@/lib/realtime';
 import {
   AreaChart,
   Area,
@@ -117,7 +119,9 @@ function formatDayName(dateStr: string): string {
 }
 
 export default function DashboardPage() {
-  const { data, isLoading } = useQuery({
+  const { status, lastUpdate, refresh } = useRealtime({ pollInterval: 60000 });
+  
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
       const response = await api.getDashboard();
@@ -169,9 +173,30 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
+        className="flex items-center justify-between"
       >
-        <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
-        <p className="text-zinc-500 mt-1">Vue d&apos;ensemble de votre CDN</p>
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
+          <p className="text-zinc-500 mt-1">Vue d&apos;ensemble de votre CDN</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <ConnectionIndicator status={status} />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={refresh}
+            className="gap-2"
+            disabled={isFetching}
+          >
+            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Actualisation...' : 'Actualiser'}
+          </Button>
+          {lastUpdate && (
+            <span className="text-xs text-zinc-500">
+              {formatRelativeTime(lastUpdate.toISOString())}
+            </span>
+          )}
+        </div>
       </motion.div>
 
       {/* Stats Grid */}

@@ -17,7 +17,7 @@ import { AnimatedCard, CardContent, CardHeader, Button, Badge, Input, Modal, Emp
 import { formatDate, formatRelativeTime, copyToClipboard, generateDownloadUrl } from '@/lib/utils';
 import { AccessToken } from '@/types';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { toast, activity } from '@/lib/notifications';
 
 export default function TokensPage() {
   const queryClient = useQueryClient();

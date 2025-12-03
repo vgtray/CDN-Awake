@@ -17,7 +17,7 @@ import { useAuthStore } from '@/lib/auth';
 import { Card, CardContent, Button, Badge, Input, Modal, EmptyState, Skeleton, PageTransition, StaggerContainer, StaggerItem } from '@/components/ui';
 import { formatDate, getInitials } from '@/lib/utils';
 import { AdminUser } from '@/types';
-import toast from 'react-hot-toast';
+import { toast } from '@/lib/notifications';
 
 export default function UsersPage() {
   const { user: currentUser } = useAuthStore();

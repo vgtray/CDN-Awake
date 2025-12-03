@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 
 const { connectDB, pool } = require('./config/database');
@@ -26,6 +27,19 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors());
+
+// Compression middleware - compress all responses
+app.use(compression({
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    },
+    level: 6, // Balanced compression level
+    threshold: 1024, // Only compress responses larger than 1KB
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

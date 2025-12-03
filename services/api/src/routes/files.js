@@ -162,6 +162,78 @@ router.get('/:id', async (req, res) => {
 });
 
 /**
+ * GET /api/files/:id/preview - Stream file for preview (images, videos, audio)
+ */
+router.get('/:id/preview', async (req, res) => {
+    try {
+        const file = await File.findById(req.params.id);
+        
+        if (!file) {
+            return res.status(404).json({
+                error: 'Not Found',
+                message: 'File not found',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        // Only allow preview for media types
+        const allowedTypes = ['image/', 'video/', 'audio/'];
+        const isAllowed = allowedTypes.some(type => file.mime_type.startsWith(type));
+        
+        if (!isAllowed) {
+            return res.status(400).json({
+                error: 'Bad Request',
+                message: 'Preview not available for this file type',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        const filePath = path.join(__dirname, '../../uploads', file.stored_name);
+        
+        // Check if file exists
+        try {
+            await fs.access(filePath);
+        } catch {
+            return res.status(404).json({
+                error: 'Not Found',
+                message: 'File not found on disk',
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        // Set appropriate headers
+        res.setHeader('Content-Type', file.mime_type);
+        res.setHeader('Content-Length', file.size);
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.original_name)}"`);
+        
+        // Stream the file
+        const { createReadStream } = require('fs');
+        const fileStream = createReadStream(filePath);
+        
+        fileStream.on('error', (error) => {
+            logger.error('Error streaming file:', error);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    error: 'Internal Server Error',
+                    message: 'Failed to stream file',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+        
+        fileStream.pipe(res);
+    } catch (error) {
+        logger.error('Error previewing file:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to preview file',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
  * GET /api/files/:id/logs - Get access logs for a file
  */
 router.get('/:id/logs', async (req, res) => {

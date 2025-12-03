@@ -11,6 +11,7 @@ const AccessLog = require('../models/AccessLog');
 const ApiKey = require('../models/ApiKey');
 const { adminAuth, superadminOnly } = require('../middleware/adminAuth');
 const { sanitizeFileName } = require('../middleware/validation');
+const { cache, cacheMiddleware, invalidateCache } = require('../middleware/cache');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -58,8 +59,9 @@ function handleValidationErrors(req, res, next) {
 
 /**
  * GET /api/admin/dashboard - Get dashboard overview
+ * Cached for 30 seconds to improve performance
  */
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', cacheMiddleware(30), async (req, res) => {
     try {
         const [fileStats, tokenStats, logStats, recentLogs, topFiles, dailyStats] = await Promise.all([
             File.getStats(),
@@ -111,21 +113,154 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/admin/system - Get system health and statistics
+ */
+router.get('/system', async (req, res) => {
+    try {
+        const cacheStats = cache.getStats();
+        const memoryUsage = process.memoryUsage();
+        const uptime = process.uptime();
+        
+        res.json({
+            success: true,
+            data: {
+                uptime: {
+                    seconds: Math.floor(uptime),
+                    formatted: formatUptime(uptime)
+                },
+                memory: {
+                    heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+                    heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+                    rss: Math.round(memoryUsage.rss / 1024 / 1024),
+                    external: Math.round(memoryUsage.external / 1024 / 1024)
+                },
+                cache: cacheStats,
+                nodeVersion: process.version,
+                platform: process.platform,
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        logger.error('System stats error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to get system stats',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * GET /api/admin/cache - Get cache statistics
+ */
+router.get('/cache', async (req, res) => {
+    try {
+        const stats = cache.getStats();
+        
+        res.json({
+            success: true,
+            data: {
+                ...stats,
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        logger.error('Cache stats error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to get cache stats',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * POST /api/admin/cache/clear - Clear the cache
+ */
+router.post('/cache/clear', superadminOnly, async (req, res) => {
+    try {
+        const { pattern } = req.body;
+        
+        if (pattern) {
+            const deleted = cache.deletePattern(pattern);
+            logger.info(`Cache cleared with pattern: ${pattern}, ${deleted} entries removed`);
+            res.json({
+                success: true,
+                message: `Cleared ${deleted} cache entries matching pattern`,
+                pattern
+            });
+        } else {
+            cache.clear();
+            res.json({
+                success: true,
+                message: 'All cache cleared'
+            });
+        }
+    } catch (error) {
+        logger.error('Cache clear error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to clear cache',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * Format uptime to human-readable string
+ */
+function formatUptime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    const parts = [];
+    if (days > 0) parts.push(`${days}j`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0) parts.push(`${minutes}m`);
+    if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+    
+    return parts.join(' ');
+}
+
 // ============ FILES MANAGEMENT ============
 
 /**
- * GET /api/admin/files - List all files with full details
+ * GET /api/admin/files - List all files with full details and advanced filters
  */
 router.get('/files', async (req, res) => {
     try {
-        const { page = 1, limit = 20, search, sortBy, sortOrder } = req.query;
+        const { 
+            page = 1, 
+            limit = 20, 
+            search, 
+            sortBy, 
+            sortOrder,
+            // Advanced filters
+            mimeType,
+            mimeCategory,
+            minSize,
+            maxSize,
+            startDate,
+            endDate,
+            uploadedBy
+        } = req.query;
         
         const result = await File.findAll({
             page: parseInt(page),
             limit: Math.min(parseInt(limit) || 20, 100),
             search,
             sortBy,
-            sortOrder
+            sortOrder,
+            mimeType,
+            mimeCategory,
+            minSize: minSize ? parseInt(minSize) : null,
+            maxSize: maxSize ? parseInt(maxSize) : null,
+            startDate,
+            endDate,
+            uploadedBy
         });
         
         // Get token counts for each file
@@ -148,13 +283,53 @@ router.get('/files', async (req, res) => {
         res.json({
             success: true,
             data: filesWithTokens,
-            pagination: result.pagination
+            pagination: result.pagination,
+            filters: result.filters
         });
     } catch (error) {
         logger.error('Admin list files error:', error);
         res.status(500).json({
             error: 'Internal Server Error',
             message: 'Failed to list files',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * GET /api/admin/files/filters - Get available filter options
+ */
+router.get('/files/filters', async (req, res) => {
+    try {
+        const [mimeTypes, sizeStats] = await Promise.all([
+            File.getMimeTypes(),
+            File.getSizeStats()
+        ]);
+        
+        res.json({
+            success: true,
+            data: {
+                mimeTypes,
+                mimeCategories: ['image', 'video', 'audio', 'document', 'archive'],
+                sizeRange: {
+                    min: parseInt(sizeStats.min_size) || 0,
+                    max: parseInt(sizeStats.max_size) || 0,
+                    avg: Math.round(parseFloat(sizeStats.avg_size)) || 0,
+                    median: Math.round(parseFloat(sizeStats.median_size)) || 0
+                },
+                sortOptions: [
+                    { value: 'created_at', label: 'Date de création' },
+                    { value: 'original_name', label: 'Nom' },
+                    { value: 'size', label: 'Taille' },
+                    { value: 'mime_type', label: 'Type' }
+                ]
+            }
+        });
+    } catch (error) {
+        logger.error('Get file filters error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to get filter options',
             timestamp: new Date().toISOString()
         });
     }
@@ -251,6 +426,9 @@ router.delete('/files/:id', [
             });
         }
         
+        // Invalidate dashboard cache
+        invalidateCache(['route:/api/admin/dashboard*', 'route:/api/admin/files*']);
+        
         // Log activity
         await AdminUser.logActivity({
             userId: req.adminUser.id,
@@ -330,6 +508,9 @@ router.post('/files/upload', upload.single('file'), async (req, res) => {
             responseTimeMs: Date.now() - startTime,
             metadata: { originalName: file.originalname, uploadedBy: req.adminUser.username }
         });
+        
+        // Invalidate dashboard cache after upload
+        invalidateCache(['route:/api/admin/dashboard*', 'route:/api/admin/files*']);
         
         // Log admin activity
         await AdminUser.logActivity({
@@ -598,7 +779,7 @@ router.post('/tokens/bulk-revoke', [
  */
 router.get('/logs', async (req, res) => {
     try {
-        const { page = 1, limit = 50, action, statusCode, ipAddress, startDate, endDate } = req.query;
+        const { page = 1, limit = 50, action, statusCode, ipAddress, startDate, endDate, search } = req.query;
         
         const result = await AccessLog.findAll({
             page: parseInt(page),
@@ -607,7 +788,8 @@ router.get('/logs', async (req, res) => {
             statusCode: statusCode ? parseInt(statusCode) : null,
             ipAddress,
             startDate,
-            endDate
+            endDate,
+            search
         });
         
         res.json({
@@ -620,6 +802,66 @@ router.get('/logs', async (req, res) => {
         res.status(500).json({
             error: 'Internal Server Error',
             message: 'Failed to get logs',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * GET /api/admin/logs/export - Export logs as CSV or JSON
+ */
+router.get('/logs/export', async (req, res) => {
+    try {
+        const { format = 'json', action, statusCode, ipAddress, startDate, endDate, limit = 1000 } = req.query;
+        
+        const result = await AccessLog.findAll({
+            page: 1,
+            limit: Math.min(parseInt(limit) || 1000, 10000),
+            action,
+            statusCode: statusCode ? parseInt(statusCode) : null,
+            ipAddress,
+            startDate,
+            endDate
+        });
+        
+        const logs = result.logs;
+        
+        if (format === 'csv') {
+            // Generate CSV
+            const headers = ['id', 'action', 'file_name', 'ip_address', 'user_agent', 'status_code', 'response_time_ms', 'created_at'];
+            const csvRows = [headers.join(',')];
+            
+            for (const log of logs) {
+                const row = headers.map(header => {
+                    const value = log[header];
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                });
+                csvRows.push(row.join(','));
+            }
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="logs-${new Date().toISOString().split('T')[0]}.csv"`);
+            return res.send(csvRows.join('\n'));
+        }
+        
+        // Default: JSON
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="logs-${new Date().toISOString().split('T')[0]}.json"`);
+        res.json({
+            exported_at: new Date().toISOString(),
+            total: logs.length,
+            filters: { action, statusCode, ipAddress, startDate, endDate },
+            data: logs
+        });
+    } catch (error) {
+        logger.error('Export logs error:', error);
+        res.status(500).json({
+            error: 'Internal Server Error',
+            message: 'Failed to export logs',
             timestamp: new Date().toISOString()
         });
     }
