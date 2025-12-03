@@ -1,19 +1,9 @@
 FROM nginx:1.25-alpine
 
-# Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy error pages
 COPY 404.html /usr/share/nginx/html/
 COPY 50x.html /usr/share/nginx/html/
-
-# Copy main website files
-COPY index.html /usr/share/nginx/html/
 COPY favicon.svg /usr/share/nginx/html/
-COPY admin-login.html /usr/share/nginx/html/
-COPY admin-dashboard.html /usr/share/nginx/html/
-COPY admin-utils.js /usr/share/nginx/html/
-COPY admin-dashboard.js /usr/share/nginx/html/
 
 # Create logs directory
 RUN mkdir -p /var/log/nginx
