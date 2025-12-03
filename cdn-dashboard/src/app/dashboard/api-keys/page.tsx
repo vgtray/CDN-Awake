@@ -17,7 +17,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth';
 import { Card, CardContent, CardHeader, Button, Badge, Input, Modal, EmptyState, Skeleton, PageTransition } from '@/components/ui';
 import { formatDate, copyToClipboard } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from '@/lib/notifications';
 
 interface APIKey {
   id: string;

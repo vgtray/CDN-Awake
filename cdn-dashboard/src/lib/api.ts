@@ -135,17 +135,19 @@ class APIClient {
     return response.data;
   }
 
-  async uploadFile(file: File, expiresInHours?: number) {
+  async uploadFile(file: File, onProgress?: (progress: number) => void) {
     const formData = new FormData();
     formData.append('file', file);
-    if (expiresInHours) {
-      formData.append('expiresInHours', expiresInHours.toString());
-    }
 
-    // Use admin upload endpoint with Bearer auth (already in interceptor)
     const response = await this.client.post('/admin/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(progress);
+        }
       },
     });
     return response.data;
@@ -213,6 +215,43 @@ class APIClient {
   async getActivityLogs(params?: { page?: number; limit?: number }) {
     const response = await this.client.get('/admin/activity', { params });
     return response.data;
+  }
+
+  // Export functions (client-side)
+  exportToCSV(data: Record<string, unknown>[], filename: string) {
+    if (data.length === 0) return;
+    
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Escape quotes and wrap in quotes if contains comma
+          const strValue = String(value ?? '');
+          return strValue.includes(',') || strValue.includes('"') 
+            ? `"${strValue.replace(/"/g, '""')}"` 
+            : strValue;
+        }).join(',')
+      )
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  exportToJSON(data: Record<string, unknown>[], filename: string) {
+    const jsonContent = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 }
 
