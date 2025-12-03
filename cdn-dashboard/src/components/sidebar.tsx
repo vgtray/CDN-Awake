@@ -69,7 +69,8 @@ export function Sidebar() {
         'fixed left-0 top-0 z-40 h-screen',
         'bg-zinc-950/80 backdrop-blur-xl',
         'border-r border-zinc-800/50',
-        'flex flex-col'
+        'flex flex-col',
+        'hidden lg:flex'
       )}
     >
       {/* Logo Section */}

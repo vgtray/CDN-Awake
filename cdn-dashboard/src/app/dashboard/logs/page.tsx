@@ -169,12 +169,12 @@ export default function LogsPage() {
   }, [data?.data]);
 
   return (
-    <PageTransition className="space-y-6">
+    <PageTransition className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Logs d&apos;accès</h1>
-          <p className="text-zinc-500 mt-1">Historique des téléchargements et accès</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100">Logs d&apos;accès</h1>
+          <p className="text-sm text-zinc-500 mt-1">Historique des téléchargements et accès</p>
         </div>
         <div className="flex items-center gap-2">
           {filteredLogs.length > 0 && (
@@ -236,55 +236,55 @@ export default function LogsPage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <AnimatedCard delay={0}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <Download className="w-5 h-5 text-emerald-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <Download className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-zinc-100">{stats.downloads}</p>
-                <p className="text-xs text-zinc-500">Téléchargements</p>
+                <p className="text-xl sm:text-2xl font-bold text-zinc-100">{stats.downloads}</p>
+                <p className="text-[10px] sm:text-xs text-zinc-500">Téléchargements</p>
               </div>
             </div>
           </CardContent>
         </AnimatedCard>
         <AnimatedCard delay={0.05}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                <Upload className="w-5 h-5 text-indigo-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-zinc-100">{stats.uploads}</p>
-                <p className="text-xs text-zinc-500">Uploads</p>
+                <p className="text-xl sm:text-2xl font-bold text-zinc-100">{stats.uploads}</p>
+                <p className="text-[10px] sm:text-xs text-zinc-500">Uploads</p>
               </div>
             </div>
           </CardContent>
         </AnimatedCard>
         <AnimatedCard delay={0.1}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-zinc-100">{stats.errors}</p>
-                <p className="text-xs text-zinc-500">Erreurs</p>
+                <p className="text-xl sm:text-2xl font-bold text-zinc-100">{stats.errors}</p>
+                <p className="text-[10px] sm:text-xs text-zinc-500">Erreurs</p>
               </div>
             </div>
           </CardContent>
         </AnimatedCard>
         <AnimatedCard delay={0.15}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                <Globe className="w-5 h-5 text-amber-400" />
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-zinc-100">{stats.uniqueIPs}</p>
-                <p className="text-xs text-zinc-500">IPs uniques</p>
+                <p className="text-xl sm:text-2xl font-bold text-zinc-100">{stats.uniqueIPs}</p>
+                <p className="text-[10px] sm:text-xs text-zinc-500">IPs uniques</p>
               </div>
             </div>
           </CardContent>
@@ -293,17 +293,17 @@ export default function LogsPage() {
 
       {/* Search & Filters */}
       <AnimatedCard delay={0.2}>
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {/* Search */}
             <div className="relative flex-1 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-600 group-focus-within:text-indigo-400 transition-colors" />
               <input
                 type="text"
-                placeholder="Rechercher par fichier, IP, action..."
+                placeholder="Rechercher..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-700/50 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-sm"
               />
             </div>
             

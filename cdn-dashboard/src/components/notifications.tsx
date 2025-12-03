@@ -303,11 +303,11 @@ export function ActivityDropdown() {
             
             {/* Panel */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-12 z-50 w-80 rounded-xl border border-zinc-800/50 bg-zinc-900/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+              className="absolute left-0 bottom-12 z-[9999] w-80 rounded-xl border border-zinc-800/50 bg-zinc-900/95 backdrop-blur-xl shadow-2xl overflow-hidden"
             >
               <ActivityPanel />
             </motion.div>

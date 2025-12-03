@@ -47,15 +47,15 @@ function StatsCard({
 }) {
   return (
     <AnimatedCard delay={delay} glow="indigo">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-zinc-400">{title}</p>
-            <div className="text-3xl font-bold text-zinc-100">
+          <div className="space-y-1 sm:space-y-2">
+            <p className="text-xs sm:text-sm font-medium text-zinc-400">{title}</p>
+            <div className="text-2xl sm:text-3xl font-bold text-zinc-100">
               <AnimatedNumber value={value} />
             </div>
             {subtitle && (
-              <p className="text-sm text-zinc-500">{subtitle}</p>
+              <p className="text-xs sm:text-sm text-zinc-500">{subtitle}</p>
             )}
             {trend && (
               <div className="flex items-center gap-1.5 mt-2">
@@ -173,13 +173,13 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
-          <p className="text-zinc-500 mt-1">Vue d&apos;ensemble de votre CDN</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100">Dashboard</h1>
+          <p className="text-sm sm:text-base text-zinc-500 mt-1">Vue d&apos;ensemble de votre CDN</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
           <ConnectionIndicator status={status} />
           <Button 
             variant="ghost" 
@@ -189,10 +189,10 @@ export default function DashboardPage() {
             disabled={isFetching}
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            {isFetching ? 'Actualisation...' : 'Actualiser'}
+            <span className="hidden sm:inline">{isFetching ? 'Actualisation...' : 'Actualiser'}</span>
           </Button>
           {lastUpdate && (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-zinc-500 hidden sm:inline">
               {formatRelativeTime(lastUpdate.toISOString())}
             </span>
           )}
@@ -200,7 +200,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Fichiers"
           value={data?.files.total || 0}
@@ -236,7 +236,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Downloads Chart */}
         <AnimatedCard delay={0.2} className="lg:col-span-2">
           <div className="p-6">
