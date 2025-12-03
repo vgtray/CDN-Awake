@@ -209,7 +209,8 @@ router.post('/login', [
                     id: user.id,
                     username: user.username,
                     email: user.email,
-                    role: user.role
+                    role: user.role,
+                    created_at: user.created_at
                 }
             }
         });
