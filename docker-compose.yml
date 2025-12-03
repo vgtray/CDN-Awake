@@ -11,8 +11,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cdn_secure_password_2024}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
