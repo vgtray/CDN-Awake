@@ -3,6 +3,7 @@ services:
     build: ./services/postgres
     container_name: cdn-postgres
     restart: unless-stopped
+    
     # ports:
     #   - "5433:5432"  # Uncomment for local development only
     environment:
@@ -103,6 +104,7 @@ services:
       retries: 3
     networks:
       - cdn-network
+      - dokploy-network
 
 volumes:
   postgres_data:
@@ -117,3 +119,5 @@ volumes:
 networks:
   cdn-network:
     driver: bridge
+  dokploy-network:
+    external: true
