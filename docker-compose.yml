@@ -90,8 +90,10 @@ services:
         condition: service_healthy
       dashboard:
         condition: service_healthy
-    ports:
-      - "${NGINX_PORT:-8899}:80"
+    # ports:
+    #   - "${NGINX_PORT:-8899}:80"  # Commented for Dokploy - it handles routing
+    expose:
+      - "80"
     volumes:
       - nginx_logs:/var/log/nginx
     healthcheck:
