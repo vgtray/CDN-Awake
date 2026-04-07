@@ -20,6 +20,7 @@ services:
       start_period: 10s
     networks:
       - cdn-network
+      - dokploy-network
 
   api:
     build: ./services/api
@@ -59,6 +60,7 @@ services:
       start_period: 60s
     networks:
       - cdn-network
+      - dokploy-network
 
   dashboard:
     build: ./cdn-dashboard
