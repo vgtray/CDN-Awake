@@ -10,15 +10,15 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: '/api/:path*',
-          destination: 'http://217.182.199.158:8899/api/:path*',
+          destination: 'http://api:3000/api/:path*',
         },
         {
           source: '/files/:path*',
-          destination: 'http://217.182.199.158:8899/files/:path*',
+          destination: 'http://api:3000/files/:path*',
         },
         {
           source: '/download/:path*',
-          destination: 'http://217.182.199.158:8899/download/:path*',
+          destination: 'http://api:3000/download/:path*',
         },
       ],
       afterFiles: [],
