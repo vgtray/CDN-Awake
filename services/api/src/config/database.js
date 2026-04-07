@@ -25,15 +25,26 @@ pool.on('error', (err) => {
  * Test database connection
  */
 async function connectDB() {
-    try {
-        const client = await pool.connect();
-        const result = await client.query('SELECT NOW()');
-        logger.info(`PostgreSQL connected at: ${result.rows[0].now}`);
-        client.release();
-        return true;
-    } catch (error) {
-        logger.error('Failed to connect to PostgreSQL:', error);
-        throw error;
+    const maxRetries = 5;
+    let delay = 2000;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const client = await pool.connect();
+            const result = await client.query('SELECT NOW()');
+            logger.info(`PostgreSQL connected at: ${result.rows[0].now}`);
+            client.release();
+            return true;
+        } catch (error) {
+            if (attempt < maxRetries) {
+                logger.warn(`Failed to connect to PostgreSQL (attempt ${attempt}/${maxRetries}). Retrying in ${delay / 1000}s...`, error.message);
+                await new Promise((resolve) => setTimeout(resolve, delay));
+                delay *= 2;
+            } else {
+                logger.error(`Failed to connect to PostgreSQL after ${maxRetries} attempts:`, error);
+                throw error;
+            }
+        }
     }
 }
 
